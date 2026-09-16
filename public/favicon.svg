@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+    <!-- خلفية دائرية متدرجة -->
+    <defs>
+        <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="bagGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#fef3c7;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+
+    <!-- الخلفية -->
+    <rect width="512" height="512" rx="112" ry="112" fill="url(#bgGradient)"/>
+
+    <!-- مقبض الحقيبة -->
+    <path d="M 200 180 L 200 150 C 200 110, 312 110, 312 150 L 312 180"
+          stroke="#ffffff"
+          stroke-width="22"
+          stroke-linecap="round"
+          fill="none"
+          opacity="0.9"/>
+
+    <!-- جسم الحقيبة -->
+    <path d="M 160 180 L 352 180 C 368 180, 376 192, 374 208 L 356 380 C 354 398, 340 410, 322 410 L 190 410 C 172 410, 158 398, 156 380 L 138 208 C 136 192, 144 180, 160 180 Z"
+          fill="url(#bagGradient)"
+          stroke="#ffffff"
+          stroke-width="4"/>
+
+    <!-- الحرف العربي "م" -->
+    <text x="256" y="340"
+          font-family="Cairo, Arial, sans-serif"
+          font-size="140"
+          font-weight="900"
+          fill="#f59e0b"
+          text-anchor="middle"
+          dominant-baseline="middle"></text>
+
+    <!-- خط سفلي مميز -->
+    <rect x="180" y="370" width="152" height="6" rx="3" fill="#f59e0b" opacity="0.4"/>
+</svg>
