@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     use HasFactory, Notifiable;
 
@@ -35,6 +36,7 @@ class User extends Authenticatable implements FilamentUser
         'email',
         'password',
         'phone',
+        'avatar',
         'role',
         'permissions',
     ];
@@ -53,6 +55,20 @@ class User extends Authenticatable implements FilamentUser
     public function canAccessPanel(Panel $panel): bool
     {
         return in_array($this->role, ['admin', 'manager'], true);
+    }
+
+    public function getFilamentAvatarUrl(): ?string
+    {
+        if ($this->avatar) {
+            return asset('storage/' . $this->avatar);
+        }
+
+        $primaryColor = ltrim(SiteSetting::current()->primary_color ?? '#C9A961', '#');
+
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name)
+            . '&background=' . $primaryColor
+            . '&color=fff'
+            . '&size=128';
     }
 
     public function hasPermission(string $permission): bool
@@ -77,6 +93,20 @@ class User extends Authenticatable implements FilamentUser
         }
 
         return false;
+    }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if ($this->avatar) {
+            return asset('storage/' . $this->avatar);
+        }
+
+        return null;
+    }
+
+    public function getInitialAttribute(): string
+    {
+        return mb_substr($this->name, 0, 1, 'UTF-8');
     }
 
     public function addresses()
@@ -104,12 +134,12 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Review::class);
     }
 
-    public function notifications()
+    public function userNotifications()
     {
         return $this->hasMany(Notification::class);
     }
 
-    public function unreadNotifications()
+    public function unreadUserNotifications()
     {
         return $this->hasMany(Notification::class)->whereNull('read_at');
     }

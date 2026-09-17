@@ -2,9 +2,13 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Concerns\HasResourcePermission;
 use App\Models\SiteSetting;
 use Filament\Forms;
+use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
@@ -13,10 +17,7 @@ use Filament\Pages\Page;
 
 class ManageSettings extends Page implements HasForms
 {
-    use HasResourcePermission;
     use InteractsWithForms;
-
-    protected static string $permissionKey = 'settings';
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
 
@@ -26,7 +27,7 @@ class ManageSettings extends Page implements HasForms
 
     protected static ?string $title = 'إعدادات الموقع';
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 100;
 
     protected static string $view = 'filament.pages.manage-settings';
 
@@ -34,98 +35,121 @@ class ManageSettings extends Page implements HasForms
 
     public function mount(): void
     {
-        $settings = SiteSetting::current();
-        $this->form->fill($settings->toArray());
+        $this->form->fill(SiteSetting::current()->toArray());
     }
 
     public function form(Form $form): Form
     {
         return $form
             ->schema([
+                Tabs::make('settings')
+                    ->tabs([
+                        Tabs\Tab::make('عام')
+                            ->icon('heroicon-o-information-circle')
+                            ->schema([
+                                TextInput::make('site_name')
+                                    ->label('اسم الموقع')
+                                    ->required()
+                                    ->maxLength(100),
 
-                Forms\Components\Section::make('الهوية البصرية')
-                    ->description('شعار الموقع والأيقونة التي تظهر في تبويب المتصفح')
-                    ->schema([
-                        Forms\Components\TextInput::make('site_name')
-                            ->label('اسم الموقع')
-                            ->required()
-                            ->maxLength(255)
-                            ->columnSpanFull(),
+                                FileUpload::make('logo')
+                                    ->label('شعار الموقع')
+                                    ->image()
+                                    ->directory('settings')
+                                    ->imageEditor()
+                                    ->maxSize(2048),
 
-                        Forms\Components\FileUpload::make('logo')
-                            ->label('شعار الموقع')
-                            ->image()
-                            ->directory('site')
-                            ->maxSize(1024)
-                            ->imageEditor()
-                            ->helperText('يُفضّل أن يكون الشعار بخلفية شفافة PNG، بمقاس 512×512 بكسل.'),
+                                FileUpload::make('favicon')
+                                    ->label('أيقونة الموقع (Favicon)')
+                                    ->image()
+                                    ->directory('settings')
+                                    ->imageEditor()
+                                    ->maxSize(512),
+                            ])->columns(2),
 
-                        Forms\Components\FileUpload::make('favicon')
-                            ->label('أيقونة الموقع (Favicon)')
-                            ->image()
-                            ->directory('site')
-                            ->maxSize(512)
-                            ->acceptedFileTypes(['image/png', 'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon'])
-                            ->helperText('الأيقونة الصغيرة التي تظهر في تبويب المتصفح. يُفضّل 64×64 بكسل (PNG أو SVG).'),
-                    ])->columns(2),
+                        Tabs\Tab::make('الهوية البصرية')
+                            ->icon('heroicon-o-paint-brush')
+                            ->schema([
+                                Section::make('لون الموقع الأساسي')
+                                    ->description('اختر اللون الرئيسي للموقع. سيتم توليد درجاته تلقائياً.')
+                                    ->schema([
+                                        ColorPicker::make('primary_color')
+                                            ->label('اللون الأساسي')
+                                            ->default('#C9A961')
+                                            ->required(),
 
-                Forms\Components\Section::make('معلومات التواصل')
-                    ->description('ستظهر هذه المعلومات في صفحة "اتصل بنا" والفوتر')
-                    ->schema([
-                        Forms\Components\TextInput::make('email')
-                            ->label('البريد الإلكتروني')
-                            ->email()
-                            ->required()
-                            ->maxLength(255),
+                                        Forms\Components\Placeholder::make('preview')
+                                            ->label('معاينة')
+                                            ->content(function (Forms\Get $get) {
+                                                $color = $get('primary_color') ?? '#C9A961';
 
-                        Forms\Components\TextInput::make('phone')
-                            ->label('رقم الهاتف')
-                            ->tel()
-                            ->required()
-                            ->maxLength(255),
+                                                return new \Illuminate\Support\HtmlString("
+                                                    <div style='display: flex; gap: 10px; align-items: center; margin-top: 8px;'>
+                                                        <div style='width: 48px; height: 48px; border-radius: 8px; background-color: {$color}; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'></div>
+                                                        <div style='font-size: 13px; font-family: monospace; color: #666;'>{$color}</div>
+                                                    </div>
+                                                ");
+                                            })
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->columns(2),
+                            ]),
 
-                        Forms\Components\TextInput::make('whatsapp')
-                            ->label('رقم واتساب')
-                            ->tel()
-                            ->maxLength(255)
-                            ->helperText('أدخل الرقم مع رمز الدولة بدون + مثال: 970599123456'),
+                        Tabs\Tab::make('التواصل')
+                            ->icon('heroicon-o-phone')
+                            ->schema([
+                                TextInput::make('email')
+                                    ->label('البريد الإلكتروني')
+                                    ->email()
+                                    ->maxLength(255),
 
-                        Forms\Components\TextInput::make('address')
-                            ->label('العنوان')
-                            ->maxLength(255)
-                            ->columnSpanFull(),
-                    ])->columns(2),
+                                TextInput::make('phone')
+                                    ->label('رقم الهاتف')
+                                    ->tel()
+                                    ->maxLength(30),
 
-                Forms\Components\Section::make('أوقات العمل')
-                    ->schema([
-                        Forms\Components\TextInput::make('working_hours_weekday')
-                            ->label('أيام الأسبوع')
-                            ->maxLength(255)
-                            ->placeholder('السبت - الخميس: 9ص - 6م'),
+                                TextInput::make('address')
+                                    ->label('العنوان')
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
 
-                        Forms\Components\TextInput::make('working_hours_weekend')
-                            ->label('نهاية الأسبوع')
-                            ->maxLength(255)
-                            ->placeholder('الجمعة: مغلق'),
-                    ])->columns(2),
+                                TextInput::make('whatsapp')
+                                    ->label('رقم WhatsApp')
+                                    ->tel()
+                                    ->helperText('مثال: 970599123456 بدون رموز'),
+                            ])->columns(2),
 
-                Forms\Components\Section::make('روابط التواصل الاجتماعي')
-                    ->schema([
-                        Forms\Components\TextInput::make('facebook')
-                            ->label('فيسبوك')
-                            ->url()
-                            ->placeholder('https://facebook.com/username'),
+                        Tabs\Tab::make('السوشيال ميديا')
+                            ->icon('heroicon-o-share')
+                            ->schema([
+                                TextInput::make('facebook')
+                                    ->label('رابط فيسبوك')
+                                    ->url()
+                                    ->maxLength(255),
 
-                        Forms\Components\TextInput::make('instagram')
-                            ->label('إنستقرام')
-                            ->url()
-                            ->placeholder('https://instagram.com/username'),
+                                TextInput::make('instagram')
+                                    ->label('رابط إنستغرام')
+                                    ->url()
+                                    ->maxLength(255),
 
-                        Forms\Components\TextInput::make('twitter')
-                            ->label('تويتر / X')
-                            ->url()
-                            ->placeholder('https://twitter.com/username'),
-                    ])->columns(3),
+                                TextInput::make('twitter')
+                                    ->label('رابط تويتر (X)')
+                                    ->url()
+                                    ->maxLength(255),
+                            ])->columns(2),
+
+                        Tabs\Tab::make('أوقات العمل')
+                            ->icon('heroicon-o-clock')
+                            ->schema([
+                                TextInput::make('working_hours_weekday')
+                                    ->label('أوقات العمل (أيام الأسبوع)')
+                                    ->maxLength(100),
+
+                                TextInput::make('working_hours_weekend')
+                                    ->label('أوقات العمل (نهاية الأسبوع)')
+                                    ->maxLength(100),
+                            ])->columns(2),
+                    ]),
             ])
             ->statePath('data');
     }
@@ -134,8 +158,7 @@ class ManageSettings extends Page implements HasForms
     {
         $data = $this->form->getState();
 
-        $settings = SiteSetting::current();
-        $settings->update($data);
+        SiteSetting::current()->update($data);
 
         Notification::make()
             ->title('تم حفظ الإعدادات بنجاح')

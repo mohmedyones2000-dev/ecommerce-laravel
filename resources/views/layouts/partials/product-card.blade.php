@@ -1,11 +1,22 @@
+@php
+    $primaryImages = $product->primary_images->take(7);
+    $imageCount = $primaryImages->count();
+    $hasMultipleImages = $imageCount > 1;
+    $totalStock = ($product->variants ?? collect())->sum('stock_quantity');
+@endphp
+
 <div class="group relative bg-white rounded-xl border overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
     style="border-color: var(--border-light);">
 
     <a href="{{ route('products.show', $product) }}" class="block">
-        <div class="aspect-square relative overflow-hidden" style="background-color: var(--bg-tertiary);">
-            @if($product->images->first())
-                <img src="{{ asset('storage/' . $product->images->first()->image_path) }}" alt="{{ $product->name }}"
-                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+        <div class="aspect-square relative overflow-hidden product-image-stack"
+            style="background-color: var(--bg-tertiary);" data-image-count="{{ $imageCount }}">
+
+            @if($imageCount > 0)
+                @foreach($primaryImages as $index => $image)
+                    <img src="{{ asset('storage/' . $image->image_path) }}" alt="{{ $product->name }}" class="product-stack-img"
+                        data-index="{{ $index }}" style="z-index: {{ $imageCount - $index }};">
+                @endforeach
             @else
                 <div class="w-full h-full flex items-center justify-center" style="color: var(--text-tertiary);">
                     <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -16,21 +27,27 @@
             @endif
 
             @if($product->discount_price)
-                <span class="absolute top-2.5 right-2.5 text-white text-[10px] font-bold px-2 py-1 rounded"
+                <span class="absolute top-2.5 right-2.5 text-white text-[10px] font-bold px-2 py-1 rounded z-50"
                     style="background-color: #dc2626;">
                     {{ round((($product->price - $product->discount_price) / $product->price) * 100) }}-%
                 </span>
             @endif
 
-            @php
-                $totalStock = ($product->variants ?? collect())->sum('stock_quantity');
-            @endphp
-
             @if($totalStock > 0 && $totalStock <= 5)
-                <span class="absolute top-2.5 left-2.5 text-white text-[10px] font-bold px-2 py-1 rounded"
+                <span class="absolute top-2.5 left-2.5 text-white text-[10px] font-bold px-2 py-1 rounded z-50"
                     style="background-color: #ea580c;">
                     بقي {{ $totalStock }}
                 </span>
+            @endif
+
+            @if($imageCount > 1)
+                <div
+                    class="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1 z-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                    @for($i = 0; $i < $imageCount; $i++)
+                        <span class="image-dot w-1.5 h-1.5 rounded-full transition-all duration-200" data-dot-index="{{ $i }}"
+                            style="background-color: rgba(255,255,255,0.5);"></span>
+                    @endfor
+                </div>
             @endif
         </div>
     </a>
@@ -41,13 +58,12 @@
                 ->where('product_id', $product->id)->exists();
         @endphp
         <button type="button" data-wishlist-btn data-product-id="{{ $product->id }}"
-            data-in-wishlist="{{ $inWishlist ? '1' : '0' }}" onclick="toggleWishlist(this)"
-            title="{{ $inWishlist ? 'حذف من المفضلة' : 'إضافة إلى المفضلة' }}" class="absolute bottom-[calc(100%-100%+theme(spacing.2)+theme(spacing.2))] opacity-0 group-hover:opacity-100 top-auto bottom-auto right-2.5 z-10 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200
-                           {{ $inWishlist ? 'opacity-100 text-red-500' : '' }}" style="top: auto; bottom: auto; inset-block-start: 0; inset-inline-end: 0; margin: 10px;
+            data-in-wishlist="{{ $inWishlist ? '1' : '0' }}"
+            onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist(this)"
+            title="{{ $inWishlist ? 'حذف من المفضلة' : 'إضافة إلى المفضلة' }}" class="absolute z-40 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200
+                           {{ $inWishlist ? 'opacity-100' : 'opacity-0 group-hover:opacity-100' }}" style="top: 10px; inset-inline-end: 10px;
                            background-color: {{ $inWishlist ? '#fee2e2' : 'rgba(255,255,255,0.95)' }};
-                           color: {{ $inWishlist ? '#dc2626' : 'var(--text-tertiary)' }};"
-            onmouseover="this.style.color='#dc2626';"
-            onmouseout="if(!this.classList.contains('text-red-500')) this.style.color='var(--text-tertiary)';">
+                           color: {{ $inWishlist ? '#dc2626' : 'var(--text-tertiary)' }};">
             <svg class="w-4 h-4 wishlist-icon" fill="{{ $inWishlist ? 'currentColor' : 'none' }}" stroke="currentColor"
                 viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -251,10 +251,15 @@
                             class="flex items-center justify-center w-9 h-9 rounded-lg transition-colors duration-150"
                             onmouseover="this.style.backgroundColor='var(--bg-tertiary)';"
                             onmouseout="this.style.backgroundColor='transparent';">
-                            <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-semibold"
-                                style="background-color: var(--gold);">
-                                {{ mb_substr(auth()->user()->name, 0, 1, 'UTF-8') }}
-                            </div>
+                            @if(auth()->user()->avatar)
+                                <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="{{ auth()->user()->name }}"
+                                    class="w-7 h-7 rounded-full object-cover">
+                            @else
+                                <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-semibold"
+                                    style="background-color: var(--gold);">
+                                    {{ auth()->user()->initial }}
+                                </div>
+                            @endif
                         </button>
 
                         <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-150"

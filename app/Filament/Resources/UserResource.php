@@ -2,12 +2,15 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HasResourcePermission;
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
 use Filament\Forms;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -15,6 +18,10 @@ use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
 {
+    use HasResourcePermission;
+
+    protected static string $permissionKey = 'users';
+
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
@@ -30,104 +37,62 @@ class UserResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-
-            Forms\Components\Section::make('معلومات المستخدم')
+            Section::make('معلومات المستخدم')
                 ->schema([
-                    Forms\Components\TextInput::make('name')
+                    FileUpload::make('avatar')
+                        ->label('الصورة الشخصية')
+                        ->image()
+                        ->avatar()
+                        ->directory('avatars')
+                        ->imageEditor()
+                        ->circleCropper()
+                        ->maxSize(2048)
+                        ->columnSpanFull(),
+
+                    TextInput::make('name')
                         ->label('الاسم')
                         ->required()
                         ->maxLength(255),
 
-                    Forms\Components\TextInput::make('email')
+                    TextInput::make('email')
                         ->label('البريد الإلكتروني')
                         ->email()
                         ->required()
                         ->unique(ignoreRecord: true)
                         ->maxLength(255),
 
-                    Forms\Components\TextInput::make('phone')
+                    TextInput::make('phone')
                         ->label('رقم الهاتف')
                         ->tel()
                         ->maxLength(20),
 
-                    Forms\Components\Select::make('role')
+                    Select::make('role')
                         ->label('نوع المستخدم')
                         ->options([
-                            'admin' => 'مدير عام (كل الصلاحيات)',
-                            'manager' => 'مدير (صلاحيات محددة)',
-                            'customer' => 'عميل (لا يدخل لوحة التحكم)',
+                            'admin'    => 'مدير عام',
+                            'manager'  => 'مدير',
+                            'customer' => 'عميل',
                         ])
                         ->required()
                         ->default('customer')
-                        ->live()
-                        ->native(false),
+                        ->native(false)
+                        ->live(),
+
+                    Forms\Components\CheckboxList::make('permissions')
+                        ->label('الصلاحيات')
+                        ->options(User::PERMISSIONS)
+                        ->columns(3)
+                        ->searchable()
+                        ->bulkToggleable()
+                        ->visible(fn (Forms\Get $get) => $get('role') === 'manager')
+                        ->columnSpanFull()
+                        ->helperText('تظهر فقط عند اختيار "مدير"'),
                 ])->columns(2),
 
-            Forms\Components\Section::make('صلاحيات المدير')
-                ->description('حدّد الأقسام التي يمكن لهذا المدير الوصول إليها')
-                ->visible(fn (Get $get) => $get('role') === 'manager')
+            Section::make('كلمة المرور')
+                ->description('اتركها فارغة إذا كنت لا تريد تغيير كلمة المرور')
                 ->schema([
-
-                    Forms\Components\Section::make('إدارة المتجر')
-                        ->collapsible()
-                        ->schema([
-                            Forms\Components\Grid::make(3)
-                                ->schema([
-                                    Forms\Components\Toggle::make('perm_products')->label('المنتجات')->inline(false),
-                                    Forms\Components\Toggle::make('perm_categories')->label('التصنيفات الرئيسية')->inline(false),
-                                    Forms\Components\Toggle::make('perm_sub_categories')->label('التصنيفات الفرعية')->inline(false),
-                                    Forms\Components\Toggle::make('perm_brands')->label('العلامات التجارية')->inline(false),
-                                    Forms\Components\Toggle::make('perm_colors')->label('الألوان')->inline(false),
-                                    Forms\Components\Toggle::make('perm_size_guides')->label('أدلة المقاسات')->inline(false),
-                                    Forms\Components\Toggle::make('perm_orders')->label('الطلبات')->inline(false),
-                                    Forms\Components\Toggle::make('perm_coupons')->label('كوبونات الخصم')->inline(false),
-                                    Forms\Components\Toggle::make('perm_cities')->label('المدن')->inline(false),
-                                    Forms\Components\Toggle::make('perm_reviews')->label('المراجعات')->inline(false),
-                                    Forms\Components\Toggle::make('perm_addresses')->label('العناوين')->inline(false),
-                                ]),
-                        ]),
-
-                    Forms\Components\Section::make('إدارة المحتوى')
-                        ->collapsible()
-                        ->schema([
-                            Forms\Components\Grid::make(3)
-                                ->schema([
-                                    Forms\Components\Toggle::make('perm_pages')->label('الصفحات الثابتة')->inline(false),
-                                    Forms\Components\Toggle::make('perm_faqs')->label('الأسئلة الشائعة')->inline(false),
-                                    Forms\Components\Toggle::make('perm_settings')->label('إعدادات الموقع')->inline(false),
-                                ]),
-                        ]),
-
-                    Forms\Components\Section::make('إدارة المستخدمين')
-                        ->collapsible()
-                        ->schema([
-                            Forms\Components\Toggle::make('perm_users')->label('المستخدمون')->inline(false),
-                        ]),
-
-                    Forms\Components\Actions::make([
-                        Forms\Components\Actions\Action::make('select_all')
-                            ->label('تحديد الكل')
-                            ->color('gray')
-                            ->action(function (Set $set) {
-                                foreach (array_keys(User::PERMISSIONS) as $key) {
-                                    $set('perm_' . $key, true);
-                                }
-                            }),
-
-                        Forms\Components\Actions\Action::make('deselect_all')
-                            ->label('إلغاء الكل')
-                            ->color('gray')
-                            ->action(function (Set $set) {
-                                foreach (array_keys(User::PERMISSIONS) as $key) {
-                                    $set('perm_' . $key, false);
-                                }
-                            }),
-                    ]),
-                ]),
-
-            Forms\Components\Section::make('كلمة المرور')
-                ->schema([
-                    Forms\Components\TextInput::make('password')
+                    TextInput::make('password')
                         ->label('كلمة المرور')
                         ->password()
                         ->dehydrateStateUsing(fn ($state) => Hash::make($state))
@@ -136,7 +101,7 @@ class UserResource extends Resource
                         ->maxLength(255)
                         ->revealable(),
 
-                    Forms\Components\TextInput::make('password_confirmation')
+                    TextInput::make('password_confirmation')
                         ->label('تأكيد كلمة المرور')
                         ->password()
                         ->required(fn (string $operation): bool => $operation === 'create')
@@ -151,11 +116,16 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('avatar')
+                    ->label('الصورة')
+                    ->circular()
+                    ->defaultImageUrl(fn (User $record) =>
+                        'https://ui-avatars.com/api/?name=' . urlencode($record->name) . '&background=C9A961&color=fff&size=128'),
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('الاسم')
                     ->searchable()
-                    ->sortable()
-                    ->weight('semibold'),
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('email')
                     ->label('البريد الإلكتروني')
@@ -164,32 +134,23 @@ class UserResource extends Resource
 
                 Tables\Columns\TextColumn::make('phone')
                     ->label('الهاتف')
+                    ->placeholder('—')
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('role')
                     ->label('نوع المستخدم')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'admin' => 'مدير عام',
-                        'manager' => 'مدير',
+                        'admin'    => 'مدير عام',
+                        'manager'  => 'مدير',
                         'customer' => 'عميل',
-                        default => $state,
+                        default    => $state,
                     })
                     ->color(fn (string $state): string => match ($state) {
-                        'admin' => 'danger',
-                        'manager' => 'warning',
-                        'customer' => 'gray',
-                        default => 'gray',
-                    }),
-
-                Tables\Columns\TextColumn::make('permissions')
-                    ->label('الصلاحيات')
-                    ->badge()
-                    ->color('gray')
-                    ->formatStateUsing(function (User $record) {
-                        if ($record->role === 'admin') return 'الكل';
-                        if ($record->role === 'customer') return '—';
-                        return count($record->permissions ?? []) . ' صلاحية';
+                        'admin'    => 'danger',
+                        'manager'  => 'warning',
+                        'customer' => 'info',
+                        default    => 'gray',
                     }),
 
                 Tables\Columns\TextColumn::make('created_at')
@@ -202,8 +163,8 @@ class UserResource extends Resource
                 Tables\Filters\SelectFilter::make('role')
                     ->label('نوع المستخدم')
                     ->options([
-                        'admin' => 'مدير عام',
-                        'manager' => 'مدير',
+                        'admin'    => 'مدير عام',
+                        'manager'  => 'مدير',
                         'customer' => 'عميل',
                     ]),
             ])
@@ -226,9 +187,9 @@ class UserResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListUsers::route('/'),
+            'index'  => Pages\ListUsers::route('/'),
             'create' => Pages\CreateUser::route('/create'),
-            'edit' => Pages\EditUser::route('/{record}/edit'),
+            'edit'   => Pages\EditUser::route('/{record}/edit'),
         ];
     }
 }

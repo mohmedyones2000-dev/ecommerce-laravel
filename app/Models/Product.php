@@ -74,4 +74,41 @@ class Product extends Model
             'id'
         );
     }
+
+    public function getFirstColorAttribute(): ?string
+    {
+        return $this->variants
+            ->pluck('color')
+            ->filter()
+            ->first();
+    }
+
+    public function getPrimaryImagesAttribute()
+    {
+        $allImages = $this->images->sortBy('sort_order')->values();
+
+        $color = $this->first_color;
+
+        if ($color) {
+            $colorImages = $this->images
+                ->where('color', $color)
+                ->sortBy('sort_order')
+                ->values();
+
+            if ($colorImages->isNotEmpty()) {
+                return $colorImages;
+            }
+        }
+
+        $coloredImages = $this->images
+            ->whereNotNull('color')
+            ->sortBy('sort_order')
+            ->values();
+
+        if ($coloredImages->isNotEmpty()) {
+            return $coloredImages;
+        }
+
+        return $allImages;
+    }
 }

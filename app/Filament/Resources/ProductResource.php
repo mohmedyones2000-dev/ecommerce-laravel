@@ -6,8 +6,14 @@ use App\Filament\Concerns\HasResourcePermission;
 use App\Filament\Resources\ProductResource\Pages;
 use App\Models\Color;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\SubCategory;
 use Filament\Forms;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
@@ -38,7 +44,7 @@ class ProductResource extends Resource
     {
         return $form->schema([
 
-            Forms\Components\Section::make('المعلومات الأساسية')
+            Section::make('المعلومات الأساسية')
                 ->schema([
                     Forms\Components\TextInput::make('name')
                         ->label('اسم المنتج')
@@ -61,7 +67,7 @@ class ProductResource extends Resource
                         ->columnSpanFull(),
                 ])->columns(2),
 
-            Forms\Components\Section::make('التصنيف والعلامة التجارية')
+            Section::make('التصنيف والعلامة التجارية')
                 ->schema([
                     Forms\Components\Select::make('category_id')
                         ->label('التصنيف الرئيسي')
@@ -111,7 +117,7 @@ class ProductResource extends Resource
                         ->placeholder('اختر دليل المقاسات'),
                 ])->columns(2),
 
-            Forms\Components\Section::make('التسعير')
+            Section::make('التسعير')
                 ->schema([
                     Forms\Components\TextInput::make('price')
                         ->label('السعر الأساسي')
@@ -129,7 +135,7 @@ class ProductResource extends Resource
                         ->helperText('اتركه فارغاً إذا لم يكن هناك خصم'),
                 ])->columns(2),
 
-            Forms\Components\Section::make('حالة المنتج')
+            Section::make('حالة المنتج')
                 ->schema([
                     Forms\Components\Toggle::make('is_active')
                         ->label('نشط')
@@ -144,21 +150,17 @@ class ProductResource extends Resource
                         ->onColor('warning'),
                 ])->columns(2),
 
-            Forms\Components\Section::make('المتغيرات (الألوان والمقاسات)')
-                ->description('اختر اللون من القائمة، وسيُحدد كود اللون تلقائياً. أضف المقاس والكمية')
+            Section::make('الألوان والمقاسات')
+                ->description('أضف لوناً، ثم أضف له المقاسات المتوفرة مع الكميات.')
                 ->schema([
-                    Forms\Components\Repeater::make('variants')
-                        ->relationship()
+                    Repeater::make('color_groups')
+                        ->label('')
                         ->schema([
-                            Forms\Components\Select::make('color')
+                            Select::make('color')
                                 ->label('اللون')
-                                ->options(function () {
-                                    return Color::active()
-                                        ->orderBy('name')
-                                        ->pluck('name', 'name')
-                                        ->toArray();
-                                })
+                                ->options(fn () => Color::active()->orderBy('name')->pluck('name', 'name')->toArray())
                                 ->searchable()
+                                ->required()
                                 ->live()
                                 ->afterStateUpdated(function ($state, Set $set) {
                                     $color = Color::where('name', $state)->first();
@@ -166,45 +168,122 @@ class ProductResource extends Resource
                                         $set('hex_code', $color->hex_code);
                                     }
                                 })
-                                ->placeholder('اختر اللون')
-                                ->required(),
+                                ->placeholder('اختر اللون'),
 
-                            Forms\Components\Hidden::make('hex_code'),
+                            Hidden::make('hex_code'),
 
-                            Forms\Components\TextInput::make('size')
-                                ->label('المقاس')
-                                ->maxLength(50)
-                                ->placeholder('مثال: L'),
+                            Repeater::make('sizes')
+                                ->label('المقاسات')
+                                ->schema([
+                                    Forms\Components\TextInput::make('size')
+                                        ->label('المقاس')
+                                        ->required()
+                                        ->maxLength(50)
+                                        ->placeholder('S / M / L / XL'),
 
-                            Forms\Components\TextInput::make('stock_quantity')
-                                ->label('الكمية في المخزون')
-                                ->numeric()
-                                ->default(0)
-                                ->required()
-                                ->minValue(0),
+                                    Forms\Components\TextInput::make('stock_quantity')
+                                        ->label('الكمية')
+                                        ->numeric()
+                                        ->default(0)
+                                        ->required()
+                                        ->minValue(0),
+                                ])
+                                ->columns(2)
+                                ->defaultItems(1)
+                                ->minItems(1)
+                                ->addActionLabel('+ إضافة مقاس')
+                                ->reorderable()
+                                ->collapsible()
+                                ->itemLabel(fn (array $state): ?string =>
+                                    'مقاس: ' . ($state['size'] ?? '—') . ' | كمية: ' . ($state['stock_quantity'] ?? 0)),
                         ])
-                        ->columns(3)
+                        ->columns(1)
                         ->defaultItems(1)
-                        ->addActionLabel('إضافة متغير')
-                        ->reorderable(false)
-                        ->collapsible()
-                        ->itemLabel(fn (array $state): ?string =>
-                            ($state['color'] ?? 'بدون لون') . ' — ' . ($state['size'] ?? 'بدون مقاس')),
-                ]),
-
-            Forms\Components\Section::make('صور المنتج')
-                ->description('ارفع حتى 5 صور. الصورة الأولى ستكون الصورة الرئيسية')
-                ->schema([
-                    Forms\Components\FileUpload::make('images')
-                        ->label('الصور')
-                        ->multiple()
-                        ->image()
-                        ->directory('products')
-                        ->maxFiles(5)
+                        ->minItems(0)
+                        ->addActionLabel('+ إضافة لون جديد')
                         ->reorderable()
-                        ->imageEditor()
+                        ->collapsible()
+                        ->itemLabel(function (array $state): ?string {
+                            $color = $state['color'] ?? 'لون جديد';
+                            $sizesCount = count($state['sizes'] ?? []);
+
+                            return $color . ' — ' . $sizesCount . ' مقاس';
+                        })
                         ->columnSpanFull(),
-                ]),
+                ])
+                ->collapsible()
+                ->collapsed(false),
+
+            Section::make('صور المنتج')
+                ->description('أضف صورة لكل لون. اضغط على الصورة لتحريرها. 3 صور على الأقل لكل لون، 7 كحد أقصى. الصور الأولى للّون الأول تظهر في بطاقة المنتج.')
+                ->schema([
+                    Repeater::make('images')
+                        ->relationship()
+                        ->label('')
+                        ->schema([
+                            Select::make('color')
+                                ->label('اللون')
+                                ->options(function (Get $get) {
+                                    $colorGroups = $get('../../color_groups') ?? [];
+
+                                    $colorsFromForm = collect($colorGroups)
+                                        ->pluck('color')
+                                        ->filter()
+                                        ->unique()
+                                        ->mapWithKeys(fn ($c) => [$c => $c])
+                                        ->toArray();
+
+                                    if (!empty($colorsFromForm)) {
+                                        return $colorsFromForm;
+                                    }
+
+                                    $productId = $get('../../id');
+
+                                    if ($productId) {
+                                        $colors = ProductVariant::where('product_id', $productId)
+                                            ->whereNotNull('color')
+                                            ->distinct()
+                                            ->pluck('color', 'color')
+                                            ->toArray();
+
+                                        if (!empty($colors)) {
+                                            return $colors;
+                                        }
+                                    }
+
+                                    return Color::active()->pluck('name', 'name')->toArray();
+                                })
+                                ->searchable()
+                                ->required()
+                                ->placeholder('اختر اللون'),
+
+                            FileUpload::make('image_path')
+                                ->label('الصورة')
+                                ->image()
+                                ->directory('products')
+                                ->imageEditor()
+                                ->imagePreviewHeight('80')
+                                ->openable()
+                                ->downloadable()
+                                ->required()
+                                ->maxSize(5120),
+
+                            Hidden::make('sort_order')
+                                ->default(0),
+                        ])
+                        ->columns(2)
+                        ->addActionLabel('+ إضافة صورة')
+                        ->minItems(0)
+                        ->maxItems(50)
+                        ->reorderable()
+                        ->collapsible()
+                        ->cloneable()
+                        ->itemLabel(fn (array $state): ?string =>
+                            $state['color'] ?? 'صورة جديدة')
+                        ->columnSpanFull(),
+                ])
+                ->collapsible()
+                ->collapsed(false),
         ]);
     }
 
@@ -213,9 +292,10 @@ class ProductResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\ImageColumn::make('images.image_path')
-                    ->label('الصورة')
-                    ->circular()
-                    ->defaultImageUrl('https://ui-avatars.com/api/?background=C9A961&color=fff&name=P'),
+    ->label('الصورة')
+    ->disk('public')
+    ->circular()
+    ->defaultImageUrl(asset('images/product-placeholder.svg')),
 
                 Tables\Columns\TextColumn::make('name')
                     ->label('اسم المنتج')

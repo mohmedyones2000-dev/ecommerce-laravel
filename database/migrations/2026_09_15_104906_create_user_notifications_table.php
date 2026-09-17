@@ -8,14 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('notifications', function (Blueprint $table) {
+        Schema::create('user_notifications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('title');
-            $table->text('message');
-            $table->string('type')->default('info'); // info, success, warning, danger
-            $table->string('icon')->default('bell'); // أيقونة
-            $table->string('link')->nullable(); // رابط عند الضغط
+            $table->text('message')->nullable();
+            $table->string('type')->default('info');
+            $table->string('icon')->nullable();
+            $table->string('link')->nullable();
             $table->timestamp('read_at')->nullable();
             $table->timestamps();
         });
@@ -23,6 +23,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('notifications');
+        Schema::dropIfExists('user_notifications');
     }
 };

@@ -7,6 +7,7 @@ use App\Models\City;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Services\CartService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -45,7 +46,7 @@ class CheckoutController extends Controller
     public function getShipping(Request $request)
     {
         $request->validate([
-            'city_id' => 'nullable|exists:cities,id',
+            'city_id'    => 'nullable|exists:cities,id',
             'address_id' => 'nullable|exists:addresses,id',
         ]);
 
@@ -82,7 +83,6 @@ class CheckoutController extends Controller
             'notes'          => 'nullable|string|max:255',
         ]);
 
-        // 🔴 التحقق من المخزون قبل بدء المعاملة
         foreach ($items as $item) {
             $variant = $item['variant'];
 
@@ -134,7 +134,6 @@ class CheckoutController extends Controller
                     'unit_price'         => $item['product']->discount_price ?? $item['product']->price,
                 ]);
 
-                // خصم المخزون باستخدام decrement (لضمان الذرية)
                 $item['variant']->decrement('stock_quantity', $item['quantity']);
             }
 
@@ -148,6 +147,8 @@ class CheckoutController extends Controller
             CartService::setSelectedCity(null);
 
             DB::commit();
+
+            NotificationService::orderPlaced($order);
 
             return redirect()->route('checkout.success', $order->id);
 

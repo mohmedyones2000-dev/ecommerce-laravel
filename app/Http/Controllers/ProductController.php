@@ -148,6 +148,20 @@ class ProductController extends Controller
             $uniqueColorNames[] = $name;
         }
 
+        $imagesByColor = [];
+
+        foreach ($product->images->groupBy('color') as $colorName => $imgs) {
+            $key = $colorName ?: 'بدون لون';
+
+            $imagesByColor[$key] = $imgs
+                ->sortBy('sort_order')
+                ->map(fn ($img) => [
+                    'path' => asset('storage/' . $img->image_path),
+                ])
+                ->values()
+                ->toArray();
+        }
+
         return view('products.show', [
             'product'          => $product,
             'relatedProducts'  => $relatedProducts,
@@ -155,6 +169,7 @@ class ProductController extends Controller
             'variantsData'     => $variantsData,
             'uniqueColorsData' => $uniqueColorsData,
             'uniqueColorNames' => $uniqueColorNames,
+            'imagesByColor'    => $imagesByColor,
         ]);
     }
 

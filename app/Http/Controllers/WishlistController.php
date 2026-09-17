@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use App\Models\Wishlist;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -29,6 +31,13 @@ class WishlistController extends Controller
             ->delete();
 
         if ($deleted) {
+            $product = Product::find($request->product_id);
+
+            NotificationService::wishlistRemoved(
+                Auth::id(),
+                $product->name ?? 'المنتج'
+            );
+
             return response()->json([
                 'status'      => 'removed',
                 'message'     => 'تم الحذف من المفضلة',
@@ -40,6 +49,13 @@ class WishlistController extends Controller
             'user_id'    => Auth::id(),
             'product_id' => $request->product_id,
         ]);
+
+        $product = Product::find($request->product_id);
+
+        NotificationService::wishlistAdded(
+            Auth::id(),
+            $product->name ?? 'المنتج'
+        );
 
         return response()->json([
             'status'      => 'added',

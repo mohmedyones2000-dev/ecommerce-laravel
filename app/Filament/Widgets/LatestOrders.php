@@ -15,23 +15,28 @@ class LatestOrders extends BaseWidget
 
     protected int|string|array $columnSpan = 'full';
 
-    public static function canView(): bool
-    {
-        return auth()->user()?->hasPermission('orders') ?? false;
-    }
-
     public function table(Table $table): Table
     {
         return $table
-            ->query(Order::query()->latest()->limit(5))
+            ->query(Order::query()->with('user')->latest()->limit(5))
             ->columns([
+                Tables\Columns\ImageColumn::make('user.avatar')
+                    ->label('العميل')
+                    ->disk('public')
+                    ->circular()
+                    ->defaultImageUrl(fn (Order $record) =>
+                        'https://ui-avatars.com/api/?name=' . urlencode($record->user->name ?? 'User')
+                        . '&background=C9A961&color=fff&size=128'),
+
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('الاسم')
+                    ->searchable()
+                    ->weight('semibold'),
+
                 Tables\Columns\TextColumn::make('order_number')
                     ->label('رقم الطلب')
                     ->searchable()
-                    ->weight('bold'),
-
-                Tables\Columns\TextColumn::make('user.name')
-                    ->label('العميل'),
+                    ->copyable(),
 
                 Tables\Columns\TextColumn::make('total_amount')
                     ->label('الإجمالي')
@@ -42,20 +47,20 @@ class LatestOrders extends BaseWidget
                     ->label('الحالة')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'pending' => 'قيد المراجعة',
+                        'pending'    => 'قيد المراجعة',
                         'processing' => 'قيد المعالجة',
-                        'shipped' => 'تم الشحن',
-                        'delivered' => 'تم التوصيل',
-                        'cancelled' => 'ملغي',
-                        default => $state,
+                        'shipped'    => 'تم الشحن',
+                        'delivered'  => 'تم التوصيل',
+                        'cancelled'  => 'ملغي',
+                        default      => $state,
                     })
                     ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'warning',
+                        'pending'    => 'warning',
                         'processing' => 'info',
-                        'shipped' => 'primary',
-                        'delivered' => 'success',
-                        'cancelled' => 'danger',
-                        default => 'gray',
+                        'shipped'    => 'primary',
+                        'delivered'  => 'success',
+                        'cancelled'  => 'danger',
+                        default      => 'gray',
                     }),
 
                 Tables\Columns\TextColumn::make('created_at')

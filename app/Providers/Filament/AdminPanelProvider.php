@@ -2,18 +2,18 @@
 
 namespace App\Providers\Filament;
 
+use App\Models\SiteSetting;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
-use Filament\Navigation\NavigationItem;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
+use Filament\Support\Colors\Color as SupportColor;
 use Filament\View\PanelsRenderHook;
-use Filament\Widgets;
+use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -29,30 +29,33 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->authGuard('web')
-            ->brandName('متجري')
-            ->favicon(asset('favicon.svg'))
-            ->font('Cairo')
+            ->login()
             ->colors([
-                'primary' => [
-                    50 => '#FBF8F0',
-                    100 => '#F5EFD9',
-                    200 => '#EBDDB3',
-                    300 => '#DEC78A',
-                    400 => '#D3B673',
-                    500 => '#C9A961',
-                    600 => '#B4944F',
-                    700 => '#967A3E',
-                    800 => '#786230',
-                    900 => '#5E4E26',
-                    950 => '#38301A',
-                ],
-                'gray' => Color::Zinc,
-                'danger' => Color::Red,
-                'success' => Color::Emerald,
-                'warning' => Color::Amber,
-                'info' => Color::Blue,
+                'primary' => $this->getPrimaryColor(),
             ])
+            ->font('Cairo')
+            ->brandName(fn () => SiteSetting::current()->site_name ?? 'متجري')
+            ->brandLogo(fn () => SiteSetting::current()->logo
+                ? asset('storage/' . SiteSetting::current()->logo)
+                : null)
+            ->brandLogoHeight('2.5rem')
+            ->favicon(fn () => SiteSetting::current()->favicon
+                ? asset('storage/' . SiteSetting::current()->favicon)
+                : asset('favicon.svg'))
+            ->darkMode(true)
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
+            ->userMenuItems([
+                'back-to-site' => MenuItem::make()
+                    ->label('العودة إلى المتجر')
+                    ->url('/')
+                    ->icon('heroicon-o-arrow-left-on-rectangle')
+                    ->openUrlInNewTab(),
+            ])
+            ->renderHook(
+                PanelsRenderHook::TOPBAR_END,
+                fn (): View => view('filament.hooks.topbar-actions'),
+            )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
@@ -60,29 +63,11 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
+                \App\Filament\Widgets\AdvancedStats::class,
+                \App\Filament\Widgets\TopProducts::class,
+                \App\Filament\Widgets\LatestOrders::class,
+                \App\Filament\Widgets\LowStockAlert::class,
             ])
-            ->userMenuItems([
-                'storefront' => MenuItem::make()
-                    ->label('العودة إلى الموقع')
-                    ->url('/', shouldOpenInNewTab: true)
-                    ->icon('heroicon-o-globe-alt'),
-            ])
-            ->navigationItems([
-                NavigationItem::make('العودة إلى الموقع')
-                    ->url('/', shouldOpenInNewTab: true)
-                    ->icon('heroicon-o-globe-alt')
-                    ->group('روابط سريعة')
-                    ->sort(1),
-            ])
-            ->renderHook(
-                PanelsRenderHook::STYLES_AFTER,
-                fn () => $this->renderCustomStyles()
-            )
-            ->renderHook(
-                PanelsRenderHook::SCRIPTS_AFTER,
-                fn () => $this->renderSidebarHidingScript()
-            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -96,202 +81,56 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-                \App\Http\Middleware\CheckResourcePermission::class,
             ]);
     }
 
-    protected function renderCustomStyles(): string
+    protected function getPrimaryColor(): array|string
     {
-        return '<style>
-            :root {
-                --gold: #C9A961;
-                --gold-dark: #B4944F;
-            }
+        try {
+            $hex = SiteSetting::current()->primary_color ?? '#C9A961';
 
-            .fi-sidebar {
-                border-inline-start: 1px solid rgba(0, 0, 0, 0.05);
-            }
-
-            .dark .fi-sidebar {
-                border-inline-start: 1px solid rgba(255, 255, 255, 0.05);
-            }
-
-            .fi-sidebar-header {
-                border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            }
-
-            .dark .fi-sidebar-header {
-                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            }
-
-            .fi-topbar {
-                border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            }
-
-            .dark .fi-topbar {
-                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            }
-
-            .fi-sidebar-item-label,
-            .fi-sidebar-group-label {
-                font-weight: 500;
-            }
-
-            .fi-sidebar-item-active {
-                background-color: rgba(201, 169, 97, 0.1) !important;
-            }
-
-            .dark .fi-sidebar-item-active {
-                background-color: rgba(201, 169, 97, 0.15) !important;
-            }
-
-            .fi-sidebar-item-active .fi-sidebar-item-label {
-                color: var(--gold) !important;
-                font-weight: 600;
-            }
-
-            .fi-sidebar-item-icon {
-                width: 1.125rem;
-                height: 1.125rem;
-            }
-
-            .fi-btn {
-                font-weight: 600;
-                border-radius: 0.5rem;
-            }
-
-            .fi-input {
-                border-radius: 0.5rem;
-            }
-
-            .fi-section {
-                border-radius: 0.75rem;
-            }
-
-            .fi-ta {
-                border-radius: 0.75rem;
-            }
-
-            .fi-wi-stats-overview-stat {
-                border-radius: 0.75rem;
-                border: 1px solid rgba(0, 0, 0, 0.06);
-                box-shadow: none;
-            }
-
-            .dark .fi-wi-stats-overview-stat {
-                border: 1px solid rgba(255, 255, 255, 0.06);
-            }
-
-            .fi-wi-stats-overview-stat-label {
-                font-size: 0.8125rem;
-                font-weight: 500;
-            }
-
-            .fi-wi-stats-overview-stat-value {
-                font-weight: 700;
-                letter-spacing: -0.02em;
-            }
-
-            .fi-header-heading {
-                font-weight: 700;
-                letter-spacing: -0.02em;
-            }
-
-            .fi-logo {
-                font-weight: 700;
-                letter-spacing: -0.02em;
-            }
-
-            .fi-sidebar-group-label {
-                font-size: 0.6875rem;
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-                color: rgba(0, 0, 0, 0.4);
-            }
-
-            .dark .fi-sidebar-group-label {
-                color: rgba(255, 255, 255, 0.4);
-            }
-        </style>';
+            return $this->generateColorPalette($hex);
+        } catch (\Throwable $e) {
+            return SupportColor::Amber;
+        }
     }
 
-    protected function renderSidebarHidingScript(): string
+    protected function generateColorPalette(string $hex): array
     {
-        $user = auth()->user();
+        $hex = ltrim($hex, '#');
 
-        if (!$user || $user->role !== 'manager') {
-            return '';
+        if (strlen($hex) === 3) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
         }
 
-        $mapping = [
-            'products' => 'products',
-            'categories' => 'categories',
-            'sub_categories' => 'sub-categories',
-            'brands' => 'brands',
-            'colors' => 'colors',
-            'size_guides' => 'size-guides',
-            'orders' => 'orders',
-            'coupons' => 'coupons',
-            'cities' => 'cities',
-            'reviews' => 'reviews',
-            'addresses' => 'addresses',
-            'pages' => 'pages',
-            'faqs' => 'faqs',
-            'users' => 'users',
-            'settings' => 'manage-settings',
-        ];
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
 
-        $allowedSlugs = [];
-        foreach ($mapping as $permission => $slug) {
-            if ($user->hasPermission($permission)) {
-                $allowedSlugs[] = $slug;
+        $shades = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+        $palette = [];
+
+        foreach ($shades as $shade) {
+            if ($shade === 500) {
+                $palette[$shade] = "rgb({$r}, {$g}, {$b})";
+                continue;
             }
+
+            if ($shade < 500) {
+                $ratio = (500 - $shade) / 500 * 0.9;
+                $nr = (int) round($r + (255 - $r) * $ratio);
+                $ng = (int) round($g + (255 - $g) * $ratio);
+                $nb = (int) round($b + (255 - $b) * $ratio);
+            } else {
+                $ratio = ($shade - 500) / 500 * 0.7;
+                $nr = (int) round($r * (1 - $ratio));
+                $ng = (int) round($g * (1 - $ratio));
+                $nb = (int) round($b * (1 - $ratio));
+            }
+
+            $palette[$shade] = "rgb({$nr}, {$ng}, {$nb})";
         }
 
-        $allowedJson = json_encode($allowedSlugs);
-
-        return '<script>
-            (function() {
-                const allowedSlugs = ' . $allowedJson . ';
-
-                function hideSidebarItems() {
-                    const links = document.querySelectorAll("aside a[href*=\'/admin/\']");
-
-                    links.forEach(function(link) {
-                        const href = link.getAttribute("href") || "";
-                        const match = href.match(/\/admin\/([a-z0-9\-]+)/);
-
-                        if (!match) return;
-
-                        const slug = match[1];
-
-                        if (slug === "admin" || slug === "") return;
-                        if (href.includes("/admin/profile")) return;
-
-                        if (allowedSlugs.indexOf(slug) === -1) {
-                            const li = link.closest("li");
-                            if (li) li.style.display = "none";
-                        }
-                    });
-
-                    document.querySelectorAll("aside .fi-sidebar-group").forEach(function(group) {
-                        const visibleLinks = group.querySelectorAll("li:not([style*=\'display: none\']) a");
-                        if (visibleLinks.length === 0) {
-                            group.style.display = "none";
-                        }
-                    });
-                }
-
-                document.addEventListener("DOMContentLoaded", function() {
-                    setTimeout(hideSidebarItems, 100);
-                    setTimeout(hideSidebarItems, 500);
-                    setTimeout(hideSidebarItems, 1500);
-                });
-
-                document.addEventListener("livewire:navigated", function() {
-                    setTimeout(hideSidebarItems, 100);
-                });
-            })();
-        </script>';
+        return $palette;
     }
 }

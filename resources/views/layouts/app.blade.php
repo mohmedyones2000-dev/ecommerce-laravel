@@ -15,7 +15,7 @@
         <link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">
     @endif
 
-    <meta name="theme-color" content="#C9A961">
+    <meta name="theme-color" content="{{ $siteSettings->primary_color }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,10 +26,18 @@
 
     <style>
         :root {
-            --gold: #C9A961;
-            --gold-dark: #A88844;
-            --gold-soft: #F8F4EA;
-            --gold-glow: rgba(201, 169, 97, 0.12);
+            --gold:
+                {{ $siteSettings->primary_color }}
+            ;
+            --gold-dark:
+                {{ $siteSettings->primary_color_dark }}
+            ;
+            --gold-soft:
+                {{ $siteSettings->primary_color_soft }}
+            ;
+            --gold-glow:
+                {{ $siteSettings->primary_color_glow }}
+            ;
 
             --bg-primary: #FFFFFF;
             --bg-secondary: #F9FAFB;
@@ -169,8 +177,12 @@
             --border-light: #27272A;
             --border-medium: #3F3F46;
 
-            --gold-soft: #1F1A0F;
-            --gold-glow: rgba(201, 169, 97, 0.15);
+            --gold-soft:
+                {{ $siteSettings->primary_color_soft_dark }}
+            ;
+            --gold-glow:
+                {{ $siteSettings->primary_color_glow }}
+            ;
         }
 
         html.dark body {
@@ -336,6 +348,31 @@
             font-weight: 500;
             font-size: 13px;
             letter-spacing: -0.01em;
+        }
+
+        .product-image-stack {
+            isolation: isolate;
+        }
+
+        .product-stack-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.4s ease,
+                filter 0.4s ease;
+            transform-origin: center;
+        }
+
+        .product-image-stack:hover .product-stack-img {
+            transform: scale(1.05);
+        }
+
+        .image-dot.active {
+            background-color: white !important;
+            width: 16px !important;
         }
     </style>
 
@@ -745,6 +782,67 @@
         document.addEventListener('DOMContentLoaded', function () {
             const isDark = document.documentElement.classList.contains('dark');
             updateDarkModeIcons(isDark);
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.product-image-stack').forEach(function (stack) {
+                const images = stack.querySelectorAll('.product-stack-img');
+                const dots = stack.querySelectorAll('.image-dot');
+
+                if (images.length < 2) return;
+
+                let currentIndex = 0;
+                let interval = null;
+
+                images.forEach(function (img, i) {
+                    img.style.transform = `translate(${i * 4}px, ${i * 4}px) rotate(${i * 1.5}deg)`;
+                    img.style.opacity = i < 3 ? '1' : '0';
+                    img.style.pointerEvents = 'none';
+                });
+
+                function showImage(index) {
+                    images.forEach(function (img, i) {
+                        const offset = (i - index + images.length) % images.length;
+
+                        if (offset < 3) {
+                            img.style.zIndex = 3 - offset;
+                            img.style.opacity = '1';
+                            img.style.transform = `translate(${offset * 4}px, ${offset * 4}px) rotate(${offset * 1.5}deg) scale(1)`;
+                        } else {
+                            img.style.zIndex = 0;
+                            img.style.opacity = '0';
+                            img.style.transform = `translate(0, 0) rotate(0deg) scale(0.9)`;
+                        }
+                    });
+
+                    dots.forEach(function (dot, i) {
+                        if (i === index) {
+                            dot.classList.add('active');
+                        } else {
+                            dot.classList.remove('active');
+                        }
+                    });
+                }
+
+                stack.addEventListener('mouseenter', function () {
+                    if (images.length < 2) return;
+
+                    interval = setInterval(function () {
+                        currentIndex = (currentIndex + 1) % images.length;
+                        showImage(currentIndex);
+                    }, 900);
+                });
+
+                stack.addEventListener('mouseleave', function () {
+                    clearInterval(interval);
+                    currentIndex = 0;
+                    showImage(0);
+                });
+
+                showImage(0);
+            });
         });
     </script>
 

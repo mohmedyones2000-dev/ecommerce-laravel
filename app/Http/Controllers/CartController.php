@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\ProductVariant;
 use App\Services\CartService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
@@ -64,6 +66,12 @@ class CartController extends Controller
 
         CartService::add($request->variant_id, $request->quantity);
 
+        NotificationService::cartAdded(
+            Auth::id(),
+            $variant->product->name,
+            $request->quantity
+        );
+
         return back()->with('success', 'تمت إضافة المنتج إلى السلة');
     }
 
@@ -94,7 +102,15 @@ class CartController extends Controller
             'variant_id' => 'required|exists:product_variants,id',
         ]);
 
+        $variant = ProductVariant::with('product')->find($request->variant_id);
+
+        $productName = $variant && $variant->product
+            ? $variant->product->name
+            : 'المنتج';
+
         CartService::remove($request->variant_id);
+
+        NotificationService::cartRemoved(Auth::id(), $productName);
 
         return redirect()->route('cart.index')->with('success', 'تم حذف المنتج من السلة');
     }

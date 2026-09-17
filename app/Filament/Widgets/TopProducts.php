@@ -15,11 +15,6 @@ class TopProducts extends BaseWidget
 
     protected int|string|array $columnSpan = 'full';
 
-    public static function canView(): bool
-    {
-        return auth()->user()?->hasPermission('products') ?? false;
-    }
-
     public function table(Table $table): Table
     {
         return $table
@@ -34,13 +29,14 @@ class TopProducts extends BaseWidget
             ->columns([
                 Tables\Columns\ImageColumn::make('images.image_path')
                     ->label('الصورة')
+                    ->disk('public')
                     ->circular()
-                    ->defaultImageUrl('https://ui-avatars.com/api/?background=C9A961&color=fff&name=P'),
+                    ->defaultImageUrl(asset('images/product-placeholder.svg')),
 
                 Tables\Columns\TextColumn::make('name')
                     ->label('اسم المنتج')
                     ->searchable()
-                    ->weight('bold')
+                    ->weight('semibold')
                     ->limit(40),
 
                 Tables\Columns\TextColumn::make('category.name')

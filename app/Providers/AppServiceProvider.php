@@ -2,8 +2,13 @@
 
 namespace App\Providers;
 
-use App\Models\Notification;
+use App\Models\Notification as UserNotification;
+use App\Models\Order;
+use App\Models\ProductVariant;
+use App\Models\Review;
 use App\Models\SiteSetting;
+use App\Models\User;
+use App\Services\AdminNotificationService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
@@ -18,23 +23,53 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->registerNotificationEvents();
+        $this->registerUserNotificationEvents();
+        $this->registerAdminNotificationEvents();
         $this->shareSiteSettings();
         $this->configureModels();
     }
 
-    protected function registerNotificationEvents(): void
+    protected function registerUserNotificationEvents(): void
     {
-        Notification::created(function (Notification $notification) {
+        UserNotification::created(function (UserNotification $notification) {
             Cache::forget("notif_count_user_{$notification->user_id}");
         });
 
-        Notification::updated(function (Notification $notification) {
+        UserNotification::updated(function (UserNotification $notification) {
             Cache::forget("notif_count_user_{$notification->user_id}");
         });
 
-        Notification::deleted(function (Notification $notification) {
+        UserNotification::deleted(function (UserNotification $notification) {
             Cache::forget("notif_count_user_{$notification->user_id}");
+        });
+    }
+
+    protected function registerAdminNotificationEvents(): void
+    {
+        Order::created(function (Order $order) {
+            AdminNotificationService::orderCreated($order);
+        });
+
+        User::created(function (User $user) {
+            if ($user->role === 'customer') {
+                AdminNotificationService::userRegistered($user);
+            }
+        });
+
+        Review::created(function (Review $review) {
+            AdminNotificationService::reviewCreated($review);
+        });
+
+        ProductVariant::updated(function (ProductVariant $variant) {
+            if ($variant->wasChanged('stock_quantity')) {
+                $newStock = $variant->stock_quantity;
+                $oldStock = $variant->getOriginal('stock_quantity');
+
+                if (($newStock <= 5 && $newStock > 0 && $oldStock > 5) ||
+                    ($newStock === 0 && $oldStock > 0)) {
+                    AdminNotificationService::lowStock($variant);
+                }
+            }
         });
     }
 

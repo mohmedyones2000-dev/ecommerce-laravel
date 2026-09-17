@@ -4,7 +4,7 @@
 
         <div class="mt-6 flex justify-end">
             <x-filament::button type="submit" size="lg">
-                💾 حفظ الإعدادات
+                حفظ الإعدادات
             </x-filament::button>
         </div>
     </form>
