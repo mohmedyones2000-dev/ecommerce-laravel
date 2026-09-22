@@ -4,9 +4,12 @@ namespace App\Notifications;
 
 use App\Models\Review;
 use Illuminate\Bus\Queueable;
+use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class NewReviewNotification extends Notification
+class NewReviewNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
 
@@ -14,7 +17,7 @@ class NewReviewNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     public function toDatabase(object $notifiable): array
@@ -31,8 +34,26 @@ class NewReviewNotification extends Notification
         ];
     }
 
-    public function toArray(object $notifiable): array
+    public function toBroadcast(object $notifiable): BroadcastMessage
     {
-        return $this->toDatabase($notifiable);
+        return new BroadcastMessage([
+            'id'         => $this->id,
+            'title'      => 'تقييم جديد',
+            'message'    => 'تقييم جديد على ' . ($this->review->product->name ?? 'منتج'),
+            'icon'       => 'star',
+            'color'      => $this->review->rating >= 4 ? 'success' : 'warning',
+            'url'        => '/admin/reviews/' . $this->review->id . '/edit',
+            'created_at' => now()->toISOString(),
+        ]);
+    }
+
+    public function broadcastOn(): array
+    {
+        return [new PrivateChannel('admin.notifications')];
+    }
+
+    public function broadcastAs(): string
+    {
+        return 'new.review';
     }
 }

@@ -1,3 +1,34 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ==================================================
+   أنيميشنات الإشعارات اللحظية
+   ================================================== */
+
+@keyframes ping-once {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.4); }
+    100% { transform: scale(1); }
+}
+
+.animate-ping-once {
+    animation: ping-once 0.4s ease-out;
+}
+
+.fade-in-notif {
+    animation: fadeInNotif 0.3s ease-out;
+}
+
+@keyframes fadeInNotif {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ==================================================
+   تحسينات إضافية
+   ================================================== */
+
+[x-cloak] {
+    display: none !important;
+}

@@ -134,6 +134,16 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+        'audit' => [
+    'driver' => 'daily',
+    'path' => storage_path('logs/audit.log'),
+    'level' => env('LOG_LEVEL', 'debug'),
+    'days' => 30,
+    'formatter' => Monolog\Formatter\JsonFormatter::class,
+    'formatter_with' => [
+        'appendNewline' => true,
+    ],
+],
 
     ],
 

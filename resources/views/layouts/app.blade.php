@@ -24,6 +24,10 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <script>
+    window.userId = {{ auth()->id() ?? 'null' }};
+    window.userRole = '{{ auth()->user()?->role ?? '' }}';
+</script>
     <style>
         :root {
             --gold:
@@ -384,6 +388,12 @@
             }
         })();
     </script>
+
+
+<script>
+    window.userId = {{ auth()->id() ?? 'null' }};
+    window.userRole = '{{ auth()->user()?->role ?? '' }}';
+</script>
 </head>
 
 <body class="antialiased min-h-screen flex flex-col">

@@ -43,7 +43,7 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
         Auth::login($user);
 
-        NotificationService::welcome($user->id, $user->name);
+        NotificationService::login($user->id);
 
         return redirect('/');
     }
