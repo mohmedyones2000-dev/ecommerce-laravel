@@ -112,4 +112,137 @@ class Product extends Model
 
         return $allImages;
     }
+
+
+    // ============================================
+// ✅ Scopes للبحث والفلترة
+// ============================================
+
+/**
+ * ✅ بحث نصي في حقول متعددة
+ */
+public function scopeSearch($query, ?string $keyword)
+{
+    if (empty($keyword)) {
+        return $query;
+    }
+
+    return $query->where(function ($q) use ($keyword) {
+        $q->where('name', 'LIKE', "%{$keyword}%")
+          ->orWhere('description', 'LIKE', "%{$keyword}%")
+          ->orWhereHas('brand', function ($q2) use ($keyword) {
+              $q2->where('name', 'LIKE', "%{$keyword}%");
+          })
+          ->orWhereHas('category', function ($q2) use ($keyword) {
+              $q2->where('name', 'LIKE', "%{$keyword}%");
+          });
+    });
 }
+
+/**
+ * ✅ فلترة حسب التصنيف (رئيسي أو فرعي)
+ */
+public function scopeCategory($query, ?int $categoryId)
+{
+    if (empty($categoryId)) {
+        return $query;
+    }
+
+    return $query->where(function ($q) use ($categoryId) {
+        $q->where('category_id', $categoryId)
+          ->orWhere('sub_category_id', $categoryId);
+    });
+}
+
+/**
+ * ✅ فلترة حسب الماركة
+ */
+public function scopeBrand($query, ?int $brandId)
+{
+    if (empty($brandId)) {
+        return $query;
+    }
+
+    return $query->where('brand_id', $brandId);
+}
+
+/**
+ * ✅ فلترة حسب الجنس (رجالي، نسائي، أطفال)
+ *    (باستخدام اسم التصنيف — لأن جدول products لا يحتوي على حقل gender)
+ */
+public function scopeGender($query, ?string $gender)
+{
+    if (empty($gender)) {
+        return $query;
+    }
+
+    $categoryMap = [
+        'men'   => 'ملابس رجالية',
+        'women' => 'ملابس نسائية',
+        'kids'  => 'ملابس أطفال',
+    ];
+
+    if (!isset($categoryMap[$gender])) {
+        return $query;
+    }
+
+    return $query->whereHas('category', function ($q) use ($categoryMap, $gender) {
+        $q->where('name', $categoryMap[$gender]);
+    });
+}
+
+/**
+ * ✅ فلترة حسب نطاق السعر
+ */
+public function scopePriceRange($query, $minPrice = null, $maxPrice = null)
+{
+    return $query
+        ->when($minPrice, fn($q) => $q->where('price', '>=', (float) $minPrice))
+        ->when($maxPrice, fn($q) => $q->where('price', '<=', (float) $maxPrice));
+}
+
+/**
+ * ✅ فلترة حسب حالة المخزون
+ */
+public function scopeStockStatus($query, ?string $status)
+{
+    if (empty($status)) {
+        return $query;
+    }
+
+    return match ($status) {
+        'in_stock'     => $query->whereHas('variants', fn($q) => $q->where('stock_quantity', '>', 0)),
+        'low_stock'    => $query->whereHas('variants', fn($q) => $q->whereBetween('stock_quantity', [1, 5])),
+        'out_of_stock' => $query->whereDoesntHave('variants', fn($q) => $q->where('stock_quantity', '>', 0)),
+        default        => $query,
+    };
+}
+
+/**
+ * ✅ فلترة حسب وجود خصم
+ */
+public function scopeHasDiscount($query, bool $hasDiscount = false)
+{
+    if (!$hasDiscount) {
+        return $query;
+    }
+
+    return $query->whereNotNull('discount_price')
+                 ->where('discount_price', '>', 0);
+}
+
+/**
+ * ✅ الترتيب
+ */
+public function scopeSort($query, ?string $sort)
+{
+    return match ($sort) {
+        'oldest'     => $query->oldest(),
+        'price_asc'  => $query->orderByRaw('COALESCE(discount_price, price) ASC'),
+        'price_desc' => $query->orderByRaw('COALESCE(discount_price, price) DESC'),
+        'name_asc'   => $query->orderBy('name', 'asc'),
+        'name_desc'  => $query->orderBy('name', 'desc'),
+        'rating'     => $query->orderByDesc('rating_avg'),
+        default      => $query->latest(),
+    };
+}}

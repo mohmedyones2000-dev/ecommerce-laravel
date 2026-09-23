@@ -90,6 +90,8 @@ class AppServiceProvider extends ServiceProvider
 
     protected function configureModels(): void
     {
-        Model::shouldBeStrict(!$this->app->isProduction());
+        Model::preventLazyLoading(false);
+    Model::preventSilentlyDiscardingAttributes(!$this->app->isProduction());
+    Model::preventAccessingMissingAttributes(!$this->app->isProduction());
     }
 }
