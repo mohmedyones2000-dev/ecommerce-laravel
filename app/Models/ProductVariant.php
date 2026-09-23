@@ -14,8 +14,14 @@ class ProductVariant extends Model
         'hex_code',
         'size',
         'stock_quantity',
+        'price',           // ← أضف هذا
+    'discount_price',
         'product_id',
     ];
+    protected $casts = [
+    'price'          => 'decimal:2',
+    'discount_price' => 'decimal:2',
+];
 
     public function product()
     {
