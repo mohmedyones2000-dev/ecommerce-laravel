@@ -83,18 +83,6 @@ class ListColors extends ListRecords
                 ->modifyQueryUsing(fn (Builder $query) =>
                     $query->where('is_active', false)),
 
-            'used' => Tab::make('مستخدمة في منتجات')
-                ->badge(Color::has('variants')->count())
-                ->badgeColor('info')
-                ->modifyQueryUsing(fn (Builder $query) =>
-                    $query->has('variants')),
-
-            'unused' => Tab::make('غير مستخدمة')
-                ->badge(Color::doesntHave('variants')->count())
-                ->badgeColor('warning')
-                ->modifyQueryUsing(fn (Builder $query) =>
-                    $query->doesntHave('variants')),
-
             'recent' => Tab::make('أُضيفت حديثاً')
                 ->badge(Color::where('created_at', '>=', now()->subDays(30))->count())
                 ->badgeColor('gray')

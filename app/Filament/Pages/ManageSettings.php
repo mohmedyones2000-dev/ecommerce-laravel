@@ -4,11 +4,9 @@ namespace App\Filament\Pages;
 
 use App\Models\SiteSetting;
 use Filament\Forms;
-use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Tabs;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
@@ -66,34 +64,6 @@ class ManageSettings extends Page implements HasForms
                                     ->imageEditor()
                                     ->maxSize(512),
                             ])->columns(2),
-
-                        Tabs\Tab::make('الهوية البصرية')
-                            ->icon('heroicon-o-paint-brush')
-                            ->schema([
-                                Section::make('لون الموقع الأساسي')
-                                    ->description('اختر اللون الرئيسي للموقع. سيتم توليد درجاته تلقائياً.')
-                                    ->schema([
-                                        ColorPicker::make('primary_color')
-                                            ->label('اللون الأساسي')
-                                            ->default('#C9A961')
-                                            ->required(),
-
-                                        Forms\Components\Placeholder::make('preview')
-                                            ->label('معاينة')
-                                            ->content(function (Forms\Get $get) {
-                                                $color = $get('primary_color') ?? '#C9A961';
-
-                                                return new \Illuminate\Support\HtmlString("
-                                                    <div style='display: flex; gap: 10px; align-items: center; margin-top: 8px;'>
-                                                        <div style='width: 48px; height: 48px; border-radius: 8px; background-color: {$color}; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'></div>
-                                                        <div style='font-size: 13px; font-family: monospace; color: #666;'>{$color}</div>
-                                                    </div>
-                                                ");
-                                            })
-                                            ->columnSpanFull(),
-                                    ])
-                                    ->columns(2),
-                            ]),
 
                         Tabs\Tab::make('التواصل')
                             ->icon('heroicon-o-phone')

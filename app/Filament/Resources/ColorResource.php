@@ -108,16 +108,6 @@ class ColorResource extends Resource
                     ->alignCenter()
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('variants_count')
-                    ->label('الاستخدام')
-                    ->counts('variants')
-                    ->badge()
-                    ->color(fn ($state): string => $state > 0 ? 'success' : 'gray')
-                    ->alignCenter()
-                    ->suffix(' منتج')
-                    ->icon('heroicon-m-shopping-bag')
-                    ->toggleable(),
-
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('نشط')
                     ->boolean()
@@ -138,16 +128,6 @@ class ColorResource extends Resource
                     ->trueLabel('النشطة فقط')
                     ->falseLabel('غير النشطة'),
 
-                Tables\Filters\Filter::make('used_in_products')
-                    ->label('مستخدم في منتجات')
-                    ->query(fn (Builder $query) => $query->has('variants'))
-                    ->toggle(),
-
-                Tables\Filters\Filter::make('unused')
-                    ->label('غير مستخدم')
-                    ->query(fn (Builder $query) => $query->doesntHave('variants'))
-                    ->toggle(),
-
                 Tables\Filters\Filter::make('recent')
                     ->label('أُضيف حديثاً')
                     ->query(fn (Builder $query) =>
@@ -167,9 +147,7 @@ class ColorResource extends Resource
                     ->requiresConfirmation()
                     ->modalHeading('حذف اللون')
                     ->modalDescription(fn (Color $record): string =>
-                        $record->variants()->count() > 0
-                            ? "تحذير: هذا اللون مستخدم في " . $record->variants()->count() . " منتج. لن يكون متاحاً بعد الحذف."
-                            : "هل أنت متأكد من حذف اللون \"{$record->name}\"؟ لا يمكن التراجع.")
+                        "هل أنت متأكد من حذف اللون \"{$record->name}\"؟ لا يمكن التراجع.")
                     ->modalSubmitActionLabel('نعم، احذف'),
             ])
             ->bulkActions([
