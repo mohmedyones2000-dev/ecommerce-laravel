@@ -4,16 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Filament\Concerns\HasResourcePermission;
 use App\Filament\Resources\ProductResource\Pages;
+use App\Models\Category;
 use App\Models\Color;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\SubCategory;
 use Filament\Forms;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
@@ -40,25 +36,52 @@ class ProductResource extends Resource
 
     protected static ?string $pluralModelLabel = 'المنتجات';
 
+    protected static ?string $recordTitleAttribute = 'name';
+
+    protected static ?int $navigationSort = 1;
+
+    public static function getNavigationBadge(): ?string
+    {
+        $inactive = Product::where('is_active', false)->count();
+
+        return $inactive > 0 ? (string) $inactive : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'slug'];
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
 
-            Section::make('المعلومات الأساسية')
+            Forms\Components\Section::make('المعلومات الأساسية')
+                ->description('اسم المنتج، الرابط، والوصف')
+                ->icon('heroicon-o-information-circle')
                 ->schema([
                     Forms\Components\TextInput::make('name')
                         ->label('اسم المنتج')
                         ->required()
                         ->maxLength(255)
+                        ->prefixIcon('heroicon-o-tag')
                         ->live(onBlur: true)
                         ->afterStateUpdated(fn (string $operation, $state, Set $set) =>
-                            $operation === 'create' ? $set('slug', Str::slug($state) . '-' . rand(100, 999)) : null),
+                            $operation === 'create'
+                                ? $set('slug', Str::slug($state) . '-' . rand(100, 999))
+                                : null),
 
                     Forms\Components\TextInput::make('slug')
                         ->label('المعرّف الفريد (Slug)')
                         ->required()
                         ->unique(ignoreRecord: true)
                         ->maxLength(255)
+                        ->prefixIcon('heroicon-o-link')
                         ->helperText('المعرّف الفريد للمنتج في الرابط'),
 
                     Forms\Components\Textarea::make('description')
@@ -67,7 +90,9 @@ class ProductResource extends Resource
                         ->columnSpanFull(),
                 ])->columns(2),
 
-            Section::make('التصنيف والعلامة التجارية')
+            Forms\Components\Section::make('التصنيف والعلامة التجارية')
+                ->description('ربط المنتج بالتصنيف والعلامة التجارية')
+                ->icon('heroicon-o-folder')
                 ->schema([
                     Forms\Components\Select::make('category_id')
                         ->label('التصنيف الرئيسي')
@@ -75,6 +100,7 @@ class ProductResource extends Resource
                         ->required()
                         ->searchable()
                         ->preload()
+                        ->prefixIcon('heroicon-o-folder-open')
                         ->live()
                         ->afterStateUpdated(fn (Set $set) => $set('sub_category_id', null)),
 
@@ -83,22 +109,23 @@ class ProductResource extends Resource
                         ->options(function (Get $get) {
                             $categoryId = $get('category_id');
 
-                            if (!$categoryId) {
+                            if (! $categoryId) {
                                 return [];
                             }
 
-                            $subCategoryIds = \DB::table('category_sub_category')
-                                ->where('category_id', $categoryId)
-                                ->pluck('sub_category_id')
-                                ->toArray();
+                            $category = Category::with('subCategories')->find($categoryId);
 
-                            return SubCategory::query()
-                                ->whereIn('id', $subCategoryIds)
+                            if (! $category) {
+                                return [];
+                            }
+
+                            return $category->subCategories
                                 ->pluck('name', 'id')
                                 ->toArray();
                         })
                         ->searchable()
                         ->live()
+                        ->prefixIcon('heroicon-o-folder-arrow-down')
                         ->placeholder('اختر التصنيف الفرعي')
                         ->helperText('تظهر التصنيفات الفرعية التابعة للتصنيف الرئيسي المختار'),
 
@@ -107,6 +134,7 @@ class ProductResource extends Resource
                         ->relationship('brand', 'name')
                         ->searchable()
                         ->preload()
+                        ->prefixIcon('heroicon-o-building-storefront')
                         ->placeholder('اختر العلامة التجارية'),
 
                     Forms\Components\Select::make('size_guide_id')
@@ -114,17 +142,21 @@ class ProductResource extends Resource
                         ->relationship('sizeGuide', 'name', fn ($query) => $query->where('is_active', true))
                         ->searchable()
                         ->preload()
+                        ->prefixIcon('heroicon-o-rectangle-group')
                         ->placeholder('اختر دليل المقاسات'),
                 ])->columns(2),
 
-            Section::make('التسعير')
+            Forms\Components\Section::make('التسعير')
+                ->description('السعر الأساسي وسعر الخصم')
+                ->icon('heroicon-o-currency-dollar')
                 ->schema([
                     Forms\Components\TextInput::make('price')
                         ->label('السعر الأساسي')
                         ->numeric()
                         ->prefix('$')
                         ->required()
-                        ->minValue(0),
+                        ->minValue(0)
+                        ->live(onBlur: true),
 
                     Forms\Components\TextInput::make('discount_price')
                         ->label('سعر الخصم')
@@ -132,16 +164,23 @@ class ProductResource extends Resource
                         ->prefix('$')
                         ->nullable()
                         ->minValue(0)
-                        ->helperText('اتركه فارغاً إذا لم يكن هناك خصم'),
+                        ->rule(fn (Get $get) =>
+                            $get('price') && $get('discount_price') && $get('discount_price') >= $get('price')
+                                ? 'nullable|lt:price'
+                                : 'nullable')
+                        ->helperText('اتركه فارغاً إذا لم يكن هناك خصم. يجب أن يكون أقل من السعر الأساسي'),
                 ])->columns(2),
 
-            Section::make('حالة المنتج')
+            Forms\Components\Section::make('حالة المنتج')
+                ->description('ظهور المنتج في المتجر')
+                ->icon('heroicon-o-eye')
                 ->schema([
                     Forms\Components\Toggle::make('is_active')
                         ->label('نشط')
                         ->helperText('ظاهر في المتجر')
                         ->default(true)
-                        ->onColor('success'),
+                        ->onColor('success')
+                        ->offColor('danger'),
 
                     Forms\Components\Toggle::make('is_featured')
                         ->label('منتج مميز')
@@ -150,13 +189,14 @@ class ProductResource extends Resource
                         ->onColor('warning'),
                 ])->columns(2),
 
-            Section::make('الألوان والمقاسات')
+            Forms\Components\Section::make('الألوان والمقاسات')
                 ->description('أضف لوناً، ثم أضف له المقاسات المتوفرة مع الكميات.')
+                ->icon('heroicon-o-swatch')
                 ->schema([
-                    Repeater::make('color_groups')
+                    Forms\Components\Repeater::make('color_groups')
                         ->label('')
                         ->schema([
-                            Select::make('color')
+                            Forms\Components\Select::make('color')
                                 ->label('اللون')
                                 ->options(fn () => Color::active()->orderBy('name')->pluck('name', 'name')->toArray())
                                 ->searchable()
@@ -170,9 +210,9 @@ class ProductResource extends Resource
                                 })
                                 ->placeholder('اختر اللون'),
 
-                            Hidden::make('hex_code'),
+                            Forms\Components\Hidden::make('hex_code'),
 
-                            Repeater::make('sizes')
+                            Forms\Components\Repeater::make('sizes')
                                 ->label('المقاسات')
                                 ->schema([
                                     Forms\Components\TextInput::make('size')
@@ -214,14 +254,15 @@ class ProductResource extends Resource
                 ->collapsible()
                 ->collapsed(false),
 
-            Section::make('صور المنتج')
-                ->description('أضف صورة لكل لون. اضغط على الصورة لتحريرها. 3 صور على الأقل لكل لون، 7 كحد أقصى. الصور الأولى للّون الأول تظهر في بطاقة المنتج.')
+            Forms\Components\Section::make('صور المنتج')
+                ->description('أضف صورة لكل لون. 3 صور على الأقل لكل لون، 7 كحد أقصى. الصور الأولى للّون الأول تظهر في بطاقة المنتج.')
+                ->icon('heroicon-o-photo')
                 ->schema([
-                    Repeater::make('images')
+                    Forms\Components\Repeater::make('images')
                         ->relationship()
                         ->label('')
                         ->schema([
-                            Select::make('color')
+                            Forms\Components\Select::make('color')
                                 ->label('اللون')
                                 ->options(function (Get $get) {
                                     $colorGroups = $get('../../color_groups') ?? [];
@@ -233,7 +274,7 @@ class ProductResource extends Resource
                                         ->mapWithKeys(fn ($c) => [$c => $c])
                                         ->toArray();
 
-                                    if (!empty($colorsFromForm)) {
+                                    if (! empty($colorsFromForm)) {
                                         return $colorsFromForm;
                                     }
 
@@ -246,7 +287,7 @@ class ProductResource extends Resource
                                             ->pluck('color', 'color')
                                             ->toArray();
 
-                                        if (!empty($colors)) {
+                                        if (! empty($colors)) {
                                             return $colors;
                                         }
                                     }
@@ -257,7 +298,7 @@ class ProductResource extends Resource
                                 ->required()
                                 ->placeholder('اختر اللون'),
 
-                            FileUpload::make('image_path')
+                            Forms\Components\FileUpload::make('image_path')
                                 ->label('الصورة')
                                 ->image()
                                 ->directory('products')
@@ -268,7 +309,7 @@ class ProductResource extends Resource
                                 ->required()
                                 ->maxSize(5120),
 
-                            Hidden::make('sort_order')
+                            Forms\Components\Hidden::make('sort_order')
                                 ->default(0),
                         ])
                         ->columns(2)
@@ -292,28 +333,32 @@ class ProductResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\ImageColumn::make('images.image_path')
-    ->label('الصورة')
-    ->disk('public')
-    ->circular()
-    ->defaultImageUrl(asset('images/product-placeholder.svg')),
+                    ->label('الصورة')
+                    ->disk('public')
+                    ->circular()
+                    ->size(48)
+                    ->defaultImageUrl(asset('images/product-placeholder.svg')),
 
                 Tables\Columns\TextColumn::make('name')
                     ->label('اسم المنتج')
                     ->searchable()
                     ->sortable()
                     ->weight('semibold')
-                    ->limit(30),
+                    ->limit(30)
+                    ->tooltip(fn (Product $record): string => $record->name),
 
                 Tables\Columns\TextColumn::make('category.name')
                     ->label('التصنيف')
                     ->badge()
                     ->color('gray')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('brand.name')
                     ->label('العلامة التجارية')
                     ->badge()
                     ->color('gray')
+                    ->placeholder('—')
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('sizeGuide.name')
@@ -321,46 +366,68 @@ class ProductResource extends Resource
                     ->badge()
                     ->color('gray')
                     ->placeholder('—')
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('price')
                     ->label('السعر')
                     ->money('USD')
-                    ->sortable(),
+                    ->sortable()
+                    ->weight('semibold'),
 
                 Tables\Columns\TextColumn::make('discount_price')
                     ->label('سعر الخصم')
                     ->money('USD')
                     ->color('danger')
+                    ->placeholder('—')
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('variants_sum_stock_quantity')
                     ->label('المخزون')
                     ->sum('variants', 'stock_quantity')
                     ->badge()
+                    ->alignCenter()
                     ->color(fn ($state) => $state > 10 ? 'success' : ($state > 0 ? 'warning' : 'danger'))
+                    ->icon(fn ($state) => $state > 10
+                        ? 'heroicon-m-check-circle'
+                        : ($state > 0 ? 'heroicon-m-exclamation-triangle' : 'heroicon-m-x-circle'))
                     ->suffix(' قطعة'),
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('نشط')
-                    ->boolean(),
+                    ->boolean()
+                    ->alignCenter(),
 
                 Tables\Columns\IconColumn::make('is_featured')
                     ->label('مميز')
-                    ->boolean(),
+                    ->boolean()
+                    ->alignCenter()
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('تاريخ الإضافة')
+                    ->dateTime('Y-m-d')
+                    ->sortable()
+                    ->color('gray')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('category')
                     ->label('التصنيف الرئيسي')
-                    ->relationship('category', 'name'),
+                    ->relationship('category', 'name')
+                    ->searchable()
+                    ->preload(),
 
                 Tables\Filters\SelectFilter::make('brand')
                     ->label('العلامة التجارية')
-                    ->relationship('brand', 'name'),
+                    ->relationship('brand', 'name')
+                    ->searchable()
+                    ->preload(),
 
                 Tables\Filters\SelectFilter::make('size_guide')
                     ->label('دليل المقاسات')
-                    ->relationship('sizeGuide', 'name'),
+                    ->relationship('sizeGuide', 'name')
+                    ->searchable()
+                    ->preload(),
 
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('نشط')
@@ -376,18 +443,58 @@ class ProductResource extends Resource
 
                 Tables\Filters\Filter::make('has_discount')
                     ->label('يحتوي على خصم')
-                    ->query(fn ($query) => $query->whereNotNull('discount_price')),
+                    ->query(fn ($query) => $query->whereNotNull('discount_price'))
+                    ->toggle(),
+
+                Tables\Filters\Filter::make('low_stock')
+                    ->label('مخزون منخفض')
+                    ->query(fn ($query) =>
+                        $query->whereHas('variants', fn ($q) =>
+                            $q->where('stock_quantity', '>', 0)->where('stock_quantity', '<=', 5)))
+                    ->toggle(),
+
+                Tables\Filters\Filter::make('out_of_stock')
+                    ->label('نفذ المخزون')
+                    ->query(fn ($query) =>
+                        $query->whereDoesntHave('variants', fn ($q) =>
+                            $q->where('stock_quantity', '>', 0)))
+                    ->toggle(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make()->label('تعديل'),
-                Tables\Actions\DeleteAction::make()->label('حذف'),
+                Tables\Actions\EditAction::make()
+                    ->label('تعديل')
+                    ->size('sm'),
+                Tables\Actions\DeleteAction::make()
+                    ->label('حذف')
+                    ->size('sm'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()->label('حذف المحدد'),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->label('حذف المحدد'),
+
+                    Tables\Actions\BulkAction::make('activate')
+                        ->label('تفعيل')
+                        ->icon('heroicon-m-check-circle')
+                        ->color('success')
+                        ->action(fn ($records) => $records->each->update(['is_active' => true]))
+                        ->deselectRecordsAfterCompletion(),
+
+                    Tables\Actions\BulkAction::make('deactivate')
+                        ->label('تعطيل')
+                        ->icon('heroicon-m-x-circle')
+                        ->color('danger')
+                        ->action(fn ($records) => $records->each->update(['is_active' => false]))
+                        ->deselectRecordsAfterCompletion(),
                 ]),
             ])
-            ->defaultSort('created_at', 'desc');
+            ->emptyStateHeading('لا توجد منتجات')
+            ->emptyStateDescription('ابدأ بإضافة أول منتج للمتجر')
+            ->emptyStateIcon('heroicon-o-shopping-bag')
+            ->defaultSort('created_at', 'desc')
+            ->striped()
+            ->persistSearchInSession()
+            ->deferLoading();
     }
 
     public static function getRelations(): array

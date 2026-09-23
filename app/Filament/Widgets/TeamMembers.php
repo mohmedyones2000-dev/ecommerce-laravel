@@ -11,7 +11,7 @@ class TeamMembers extends BaseWidget
 {
     protected static ?string $heading = 'فريق الإدارة';
 
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 6;
 
     protected int|string|array $columnSpan = 'full';
 
@@ -23,37 +23,81 @@ class TeamMembers extends BaseWidget
     public function table(Table $table): Table
     {
         return $table
-            ->query(User::query()->where('role', '!=', 'customer'))
+            ->query(
+                User::query()
+                    ->where('role', '!=', 'customer')
+                    ->latest()
+            )
             ->columns([
+                Tables\Columns\ImageColumn::make('avatar')
+                    ->label('')
+                    ->disk('public')
+                    ->circular()
+                    ->size(40)
+                    ->defaultImageUrl(fn (User $record) =>
+                        'https://ui-avatars.com/api/?name=' . urlencode($record->name)
+                        . '&background=14b8a6&color=fff&size=80'),
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('الاسم')
-                    ->weight('bold'),
+                    ->weight('semibold')
+                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('email')
                     ->label('البريد الإلكتروني')
-                    ->copyable(),
+                    ->copyable()
+                    ->copyMessage('تم نسخ البريد')
+                    ->color('gray')
+                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('phone')
                     ->label('الهاتف')
-                    ->placeholder('—'),
+                    ->placeholder('—')
+                    ->color('gray'),
 
                 Tables\Columns\TextColumn::make('role')
                     ->label('الصلاحية')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'admin' => 'مدير عام',
+                        'admin'   => 'مدير عام',
                         'manager' => 'مدير',
-                        default => $state,
+                        default   => $state,
                     })
                     ->color(fn (string $state): string => match ($state) {
-                        'admin' => 'danger',
+                        'admin'   => 'danger',
                         'manager' => 'warning',
-                        default => 'gray',
+                        default   => 'gray',
                     }),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('تاريخ الانضمام')
-                    ->dateTime('Y-m-d'),
-            ]);
+                    ->dateTime('Y-m-d')
+                    ->since()
+                    ->sortable()
+                    ->color('gray')
+                    ->toggleable(),
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('view_all')
+                    ->label('إدارة الفريق')
+                    ->icon('heroicon-m-arrow-left')
+                    ->url(fn () => route('filament.admin.resources.users.index'))
+                    ->color('gray')
+                    ->size('sm'),
+            ])
+            ->actions([
+                Tables\Actions\Action::make('edit')
+                    ->label('تعديل')
+                    ->icon('heroicon-m-pencil-square')
+                    ->url(fn (User $record) =>
+                        route('filament.admin.resources.users.edit', $record))
+                    ->color('gray')
+                    ->size('sm'),
+            ])
+            ->paginated(false)
+            ->emptyStateHeading('لا يوجد فريق إدارة')
+            ->emptyStateDescription('لم يتم إضافة أي مدير بعد')
+            ->emptyStateIcon('heroicon-o-user-group')
+            ->striped(false);
     }
 }

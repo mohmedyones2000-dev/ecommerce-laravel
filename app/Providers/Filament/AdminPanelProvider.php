@@ -11,7 +11,7 @@ use Filament\Navigation\MenuItem;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color as SupportColor;
+use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -30,8 +30,14 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->spa() // (اختياري) تسريع التنقل داخل اللوحة
             ->colors([
-                'primary' => $this->getPrimaryColor(),
+                'primary' => Color::Teal,
+                'danger'  => Color::Rose,
+                'warning' => Color::Amber,
+                'success' => Color::Emerald,
+                'info'    => Color::Sky,
+                'gray'    => Color::Slate,
             ])
             ->font('Cairo')
             ->brandName(fn () => SiteSetting::current()->site_name ?? 'متجري')
@@ -43,8 +49,13 @@ class AdminPanelProvider extends PanelProvider
                 ? asset('storage/' . SiteSetting::current()->favicon)
                 : asset('favicon.svg'))
             ->darkMode(true)
+            ->sidebarCollapsibleOnDesktop()
+            ->sidebarFullyCollapsibleOnDesktop()
+            ->sidebarWidth('16rem') // (اختياري) عرض السايدبار
+            ->maxContentWidth('full') // (اختياري) استغلال عرض الشاشة
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
+            ->globalSearchKeyBindings(['command+k', 'ctrl+k']) // (اختياري) اختصار البحث
             ->userMenuItems([
                 'back-to-site' => MenuItem::make()
                     ->label('العودة إلى المتجر')
@@ -52,6 +63,10 @@ class AdminPanelProvider extends PanelProvider
                     ->icon('heroicon-o-arrow-left-on-rectangle')
                     ->openUrlInNewTab(),
             ])
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn (): View => view('filament.hooks.theme-styles'),
+            )
             ->renderHook(
                 PanelsRenderHook::TOPBAR_END,
                 fn (): View => view('filament.hooks.topbar-actions'),
@@ -82,55 +97,5 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
-    }
-
-    protected function getPrimaryColor(): array|string
-    {
-        try {
-            $hex = SiteSetting::current()->primary_color ?? '#C9A961';
-
-            return $this->generateColorPalette($hex);
-        } catch (\Throwable $e) {
-            return SupportColor::Amber;
-        }
-    }
-
-    protected function generateColorPalette(string $hex): array
-    {
-        $hex = ltrim($hex, '#');
-
-        if (strlen($hex) === 3) {
-            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
-        }
-
-        $r = hexdec(substr($hex, 0, 2));
-        $g = hexdec(substr($hex, 2, 2));
-        $b = hexdec(substr($hex, 4, 2));
-
-        $shades = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
-        $palette = [];
-
-        foreach ($shades as $shade) {
-            if ($shade === 500) {
-                $palette[$shade] = "rgb({$r}, {$g}, {$b})";
-                continue;
-            }
-
-            if ($shade < 500) {
-                $ratio = (500 - $shade) / 500 * 0.9;
-                $nr = (int) round($r + (255 - $r) * $ratio);
-                $ng = (int) round($g + (255 - $g) * $ratio);
-                $nb = (int) round($b + (255 - $b) * $ratio);
-            } else {
-                $ratio = ($shade - 500) / 500 * 0.7;
-                $nr = (int) round($r * (1 - $ratio));
-                $ng = (int) round($g * (1 - $ratio));
-                $nb = (int) round($b * (1 - $ratio));
-            }
-
-            $palette[$shade] = "rgb({$nr}, {$ng}, {$nb})";
-        }
-
-        return $palette;
     }
 }
