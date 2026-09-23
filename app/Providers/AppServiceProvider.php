@@ -4,10 +4,12 @@ namespace App\Providers;
 
 use App\Models\Notification as UserNotification;
 use App\Models\Order;
+use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Models\Review;
 use App\Models\SiteSetting;
 use App\Models\User;
+use App\Observers\ProductImageObserver;
 use App\Services\AdminNotificationService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -23,10 +25,16 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->registerObservers();  
         $this->registerUserNotificationEvents();
         $this->registerAdminNotificationEvents();
         $this->shareSiteSettings();
         $this->configureModels();
+    }
+
+    protected function registerObservers(): void
+    {
+        ProductImage::observe(ProductImageObserver::class);
     }
 
     protected function registerUserNotificationEvents(): void

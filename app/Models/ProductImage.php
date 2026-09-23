@@ -23,11 +23,13 @@ class ProductImage extends Model
         'sort_order' => 'integer',
     ];
 
+    // ============ العلاقات ============
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
 
+    // ============ Scopes ============
     public function scopeForColor($query, ?string $color)
     {
         return $query->where('color', $color);
@@ -38,6 +40,7 @@ class ProductImage extends Model
         return $query->orderBy('sort_order')->orderBy('id');
     }
 
+    // ============ Accessors ============
     /**
      * ✅ URL كامل للصورة
      */
@@ -46,13 +49,5 @@ class ProductImage extends Model
         return FileUploadService::url($this->image_path);
     }
 
-    /**
-     * ✅ حذف الملف تلقائياً عند حذف السجل
-     */
-    protected static function booted(): void
-    {
-        static::deleting(function (ProductImage $image) {
-            FileUploadService::delete($image->image_path);
-        });
-    }
+    // ✅ لا يوجد booted() — المنطق في Observer
 }
