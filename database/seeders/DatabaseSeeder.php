@@ -12,25 +12,34 @@ class DatabaseSeeder extends Seeder
         $this->command->newLine();
 
         $this->call([
-            // المجموعة 1: المستخدمين والإعدادات
+            // ============ المجموعة 1 ============
             UserSeeder::class,
             SiteSettingSeeder::class,
 
-            // المجموعة 2: البيانات المرجعية
+            // ============ المجموعة 2 ============
             CitySeeder::class,
             CategorySeeder::class,
             SubCategorySeeder::class,
             BrandSeeder::class,
             ColorSeeder::class,
 
-            // ✅ المجموعة 3: أدلة المقاسات
-    SizeGuideSeeder::class,
-    SizeGuideItemSeeder::class,
+            // ============ المجموعة 3 ============
+            SizeGuideSeeder::class,
+            SizeGuideItemSeeder::class,
 
+            // ============ المجموعة 4 ============
+            ProductSeeder::class,
+            ProductVariantSeeder::class,
+            ProductImageSeeder::class,
 
-    ProductSeeder::class,
-    ProductVariantSeeder::class,
-    ProductImageSeeder::class,
+            // ============ المجموعة 5 ============
+            PageSeeder::class,
+            FaqSeeder::class,
+            CouponSeeder::class,
+            AddressSeeder::class,
+            OrderSeeder::class,
+            ReviewSeeder::class,
+            NotificationSeeder::class,
         ]);
 
         $this->command->newLine();
