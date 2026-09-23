@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\FileUploadService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -35,5 +36,23 @@ class ProductImage extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order')->orderBy('id');
+    }
+
+    /**
+     * ✅ URL كامل للصورة
+     */
+    public function getImageUrlAttribute(): ?string
+    {
+        return FileUploadService::url($this->image_path);
+    }
+
+    /**
+     * ✅ حذف الملف تلقائياً عند حذف السجل
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (ProductImage $image) {
+            FileUploadService::delete($image->image_path);
+        });
     }
 }

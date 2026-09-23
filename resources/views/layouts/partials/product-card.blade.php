@@ -14,8 +14,8 @@
 
             @if($imageCount > 0)
                 @foreach($primaryImages as $index => $image)
-                    <img src="{{ asset('storage/' . $image->image_path) }}" alt="{{ $product->name }}" class="product-stack-img"
-                        data-index="{{ $index }}" style="z-index: {{ $imageCount - $index }};">
+                    <img src="{{ $image->image_url }}" alt="{{ $product->name }}" class="product-stack-img"
+    data-index="{{ $index }}" style="z-index: {{ $imageCount - $index }};">
                 @endforeach
             @else
                 <div class="w-full h-full flex items-center justify-center" style="color: var(--text-tertiary);">
