@@ -35,8 +35,6 @@ RUN npm install && npm run build
 
 RUN chmod -R 775 storage bootstrap/cache
 
-RUN COMPOSER_ALLOW_SUPERUSER=1 composer run-script post-autoload-dump || true
-
 EXPOSE 8080
 
 CMD php artisan config:clear \
