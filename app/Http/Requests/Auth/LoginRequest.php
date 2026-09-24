@@ -19,8 +19,24 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email'    => ['required', 'string', 'email'],
+            'email' => [
+                'required',
+                'string',
+                'email:rfc,strict',
+                'regex:/^[a-zA-Z0-9][a-zA-Z0-9._%+-]*@[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,}$/',
+                'max:255',
+            ],
             'password' => ['required', 'string'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'email.regex' => 'يجب إدخال بريد إلكتروني بصيغة صحيحة (مثل example@gmail.com).',
+            'email.email' => 'يجب إدخال بريد إلكتروني صحيح.',
+            'email.required' => 'حقل البريد الإلكتروني مطلوب.',
+            'password.required' => 'حقل كلمة المرور مطلوب.',
         ];
     }
 

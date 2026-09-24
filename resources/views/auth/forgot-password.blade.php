@@ -48,7 +48,9 @@
                 البريد الإلكتروني
             </label>
             <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus
-                autocomplete="username" placeholder="example@email.com" dir="ltr"
+                autocomplete="username" placeholder="example@gmail.com" dir="ltr"
+                pattern="^[a-zA-Z0-9][a-zA-Z0-9._%+-]*@[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,}$"
+                title="يجب إدخال بريد إلكتروني بصيغة صحيحة (مثل example@gmail.com)"
                 class="w-full h-12 px-4 text-sm text-left bg-transparent border border-stone-300 dark:border-stone-700 focus:border-forest dark:focus:border-gold focus:outline-none text-ink dark:text-cream placeholder:text-ink-faint dark:placeholder:text-cream/30 transition-colors"
                 style="border-radius: 4px;">
         </div>

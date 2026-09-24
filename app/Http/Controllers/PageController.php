@@ -44,7 +44,16 @@ class PageController extends Controller
     public function faq()
     {
         $faqs = Cache::remember('faqs_active', now()->addHours(6), function () {
-            return Faq::active()->orderBy('sort_order')->get();
+            return Faq::active()
+                ->orderBy('sort_order')
+                ->get()
+                ->map(fn ($faq) => [
+                    'id'       => $faq->id,
+                    'question' => $faq->question,
+                    'answer'   => $faq->answer,
+                ])
+                ->values()
+                ->toArray();
         });
 
         return view('pages.faq', compact('faqs'));
