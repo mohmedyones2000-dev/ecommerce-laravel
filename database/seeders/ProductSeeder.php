@@ -4,270 +4,203 @@ namespace Database\Seeders;
 
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Color;
 use App\Models\Product;
+use App\Models\ProductImage;
+use App\Models\ProductVariant;
 use App\Models\SizeGuide;
 use App\Models\SubCategory;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class ProductSeeder extends Seeder
 {
     public function run(): void
     {
-        // ✅ بيانات المنتجات (مقسمة حسب الجنس)
-        $products = [
-            // ==================== رجالي ====================
-            [
-                'name'        => 'قميص قطني كلاسيك',
-                'description' => 'قميص قطني 100% بتصميم كلاسيكي أنيق، مناسب للمناسبات الرسمية والعمل اليومي.',
-                'price'       => 150,
-                'gender'      => 'men',
-                'category'    => 'men-clothing',
-                'sub_category'=> 'men-shirts',
-                'brand'       => 'Zara',
-                'is_featured' => true,
-                'size_guide'  => 'مقاسات الرجالي',
-            ],
-            [
-                'name'        => 'تيشيرت قطن أساسي',
-                'description' => 'تيشيرت قطني مريح بألوان متعددة، مثالي للاستخدام اليومي.',
-                'price'       => 80,
-                'gender'      => 'men',
-                'category'    => 'men-clothing',
-                'sub_category'=> 'men-tshirts',
-                'brand'       => 'Nike',
-                'is_featured' => false,
-                'size_guide'  => 'مقاسات الرجالي',
-            ],
-            [
-                'name'        => 'بنطال جينز مستقيم',
-                'description' => 'بنطال جينز بقصة مستقيمة مريحة، مصنوع من قماش عالي الجودة.',
-                'price'       => 220,
-                'gender'      => 'men',
-                'category'    => 'men-clothing',
-                'sub_category'=> 'men-pants',
-                'brand'       => 'Levi\'s',
-                'is_featured' => true,
-                'size_guide'  => 'مقاسات الرجالي',
-            ],
-            [
-                'name'        => 'جاكيت جلد أسود',
-                'description' => 'جاكيت جلد أنيق بتصميم عصري، مناسب لفصلي الخريف والشتاء.',
-                'price'       => 550,
-                'gender'      => 'men',
-                'category'    => 'men-clothing',
-                'sub_category'=> 'men-jackets',
-                'brand'       => 'Gucci',
-                'is_featured' => true,
-                'size_guide'  => 'مقاسات الرجالي',
-            ],
-            [
-                'name'        => 'بدلة رسمية كاملة',
-                'description' => 'بدلة رسمية أنيقة من قماش فاخر، مناسبة للأعراس والمناسبات الرسمية.',
-                'price'       => 850,
-                'gender'      => 'men',
-                'category'    => 'men-clothing',
-                'sub_category'=> 'men-suits',
-                'brand'       => 'Tommy Hilfiger',
-                'is_featured' => true,
-                'size_guide'  => 'مقاسات الرجالي',
-            ],
+        $this->command->info('→ إضافة 50 منتج كامل...');
 
-            // ==================== نسائي ====================
-            [
-                'name'        => 'فستان سهرة طويل',
-                'description' => 'فستان سهرة طويل بتصميم راقٍ، مثالي للمناسبات والحفلات.',
-                'price'       => 650,
-                'gender'      => 'women',
-                'category'    => 'women-clothing',
-                'sub_category'=> 'women-dresses',
-                'brand'       => 'Zara',
-                'is_featured' => true,
-                'size_guide'  => 'مقاسات النسائي',
-            ],
-            [
-                'name'        => 'بلوزة حرير أنيقة',
-                'description' => 'بلوزة حرير ناعمة بتصميم أنيق، مناسبة للعمل والمناسبات.',
-                'price'       => 180,
-                'gender'      => 'women',
-                'category'    => 'women-clothing',
-                'sub_category'=> 'women-blouses',
-                'brand'       => 'Mango',
-                'is_featured' => false,
-                'size_guide'  => 'مقاسات النسائي',
-            ],
-            [
-                'name'        => 'تنورة ميدي بليسيه',
-                'description' => 'تنورة ميدي بطيات بليسيه أنيقة، تصميم عصري ومريح.',
-                'price'       => 200,
-                'gender'      => 'women',
-                'category'    => 'women-clothing',
-                'sub_category'=> 'women-skirts',
-                'brand'       => 'H&M',
-                'is_featured' => false,
-                'size_guide'  => 'مقاسات النسائي',
-            ],
-            [
-                'name'        => 'عباية مطرزة',
-                'description' => 'عباية سوداء أنيقة بتطريز يدوي على الأكمام، قماش فاخر ومريح.',
-                'price'       => 400,
-                'gender'      => 'women',
-                'category'    => 'women-clothing',
-                'sub_category'=> 'women-abayas',
-                'brand'       => 'Mango',
-                'is_featured' => true,
-                'size_guide'  => 'مقاسات النسائي',
-            ],
-            [
-                'name'        => 'جاكيت شتوي نسائي',
-                'description' => 'جاكيت شتوي دافئ بقبة، مناسب للأجواء الباردة.',
-                'price'       => 450,
-                'gender'      => 'women',
-                'category'    => 'women-clothing',
-                'sub_category'=> 'women-jackets',
-                'brand'       => 'H&M',
-                'is_featured' => false,
-                'size_guide'  => 'مقاسات النسائي',
-            ],
+        $categories = Category::all();
+        $subCategories = SubCategory::all();
+        $brands = Brand::all();
+        $colors = Color::pluck('name')->toArray();
+        $sizeGuides = SizeGuide::pluck('id', 'name')->toArray();
 
-            // ==================== أطفال ====================
-            [
-                'name'        => 'طقم أولادي قطني',
-                'description' => 'طقم قطني مريح للأولاد، مكون من تيشيرت وبنطال.',
-                'price'       => 120,
-                'gender'      => 'kids',
-                'category'    => 'kids-clothing',
-                'sub_category'=> 'kids-boys',
-                'brand'       => 'Nike',
-                'is_featured' => false,
-                'size_guide'  => 'مقاسات الأطفال',
-            ],
-            [
-                'name'        => 'فستان بناتي مزهّر',
-                'description' => 'فستان بناتي أنيق بطبعة زهور، قماش ناعم ومريح.',
-                'price'       => 150,
-                'gender'      => 'kids',
-                'category'    => 'kids-clothing',
-                'sub_category'=> 'kids-girls',
-                'brand'       => 'H&M',
-                'is_featured' => true,
-                'size_guide'  => 'مقاسات الأطفال',
-            ],
-            [
-                'name'        => 'طقم حديثي الولادة',
-                'description' => 'طقم قطني ناعم لحديثي الولادة، مكون من 3 قطع.',
-                'price'       => 100,
-                'gender'      => 'kids',
-                'category'    => 'kids-clothing',
-                'sub_category'=> 'kids-newborn',
-                'brand'       => 'Mango',
-                'is_featured' => false,
-                'size_guide'  => 'مقاسات الأطفال',
-            ],
+        if ($categories->isEmpty() || empty($colors)) {
+            $this->command->error('   ✗ لا توجد تصنيفات أو ألوان');
+            return;
+        }
 
-            // ==================== رياضي ====================
-            [
-                'name'        => 'طقم رياضي كامل',
-                'description' => 'طقم رياضي من قطعتين، قماش رياضي يسمح بالتهوية.',
-                'price'       => 280,
-                'gender'      => 'unisex',
-                'category'    => 'sportswear',
-                'sub_category'=> 'sport-sets',
-                'brand'       => 'Adidas',
-                'is_featured' => true,
-                'size_guide'  => 'مقاسات الرجالي',
-            ],
-            [
-                'name'        => 'حذاء رياضي احترافي',
-                'description' => 'حذاء رياضي مريح بتصميم عصري، مناسب للجري والتمارين.',
-                'price'       => 350,
-                'gender'      => 'unisex',
-                'category'    => 'sportswear',
-                'sub_category'=> 'sport-shoes',
-                'brand'       => 'Puma',
-                'is_featured' => true,
-                'size_guide'  => null,
-            ],
+        $hasSlug = Schema::hasColumn('products', 'slug');
+        $hasSizeGuide = Schema::hasColumn('products', 'size_guide_id');
 
-            // ==================== إكسسوارات ====================
-            [
-                'name'        => 'حقيبة يد جلدية',
-                'description' => 'حقيبة يد أنيقة من الجلد الطبيعي، تصميم عصري وعملي.',
-                'price'       => 320,
-                'gender'      => 'women',
-                'category'    => 'accessories',
-                'sub_category'=> 'accessory-bags',
-                'brand'       => 'Gucci',
-                'is_featured' => true,
-                'size_guide'  => null,
-            ],
-            [
-                'name'        => 'حزام جلد كلاسيك',
-                'description' => 'حزام جلد كلاسيكي بإبزيم معدني، يناسب جميع الملابس.',
-                'price'       => 120,
-                'gender'      => 'men',
-                'category'    => 'accessories',
-                'sub_category'=> 'accessory-belts',
-                'brand'       => 'Levi\'s',
-                'is_featured' => false,
-                'size_guide'  => null,
-            ],
-            [
-                'name'        => 'قبعة شمس رياضية',
-                'description' => 'قبعة رياضية بحماية من الشمس، قابلة للتعديل.',
-                'price'       => 80,
-                'gender'      => 'unisex',
-                'category'    => 'accessories',
-                'sub_category'=> 'accessory-hats',
-                'brand'       => 'Nike',
-                'is_featured' => false,
-                'size_guide'  => null,
-            ],
-            [
-                'name'        => 'ساعة يد أنيقة',
-                'description' => 'ساعة يد بتصميم أنيق، مقاومة للماء.',
-                'price'       => 500,
-                'gender'      => 'men',
-                'category'    => 'accessories',
-                'sub_category'=> 'accessory-watches',
-                'brand'       => 'Calvin Klein',
-                'is_featured' => true,
-                'size_guide'  => null,
-            ],
+        // 50 منتج جديد بأسماء متنوعة
+        $productsData = [
+            ['قميص أوكسفورد رجالي', 'قميص رسمي بقماش أوكسفورد فاخر، مثالي للعمل والمناسبات.', 180, 'men'],
+            ['تيشيرت بولو كلاسيك', 'تيشيرت بولو بياقة كلاسيكية، قماش قطني عالي الجودة.', 120, 'men'],
+            ['بنطال قماش رسمي', 'بنطال قماش رسمي بقصة مستقيمة، مناسب للدوام.', 200, 'men'],
+            ['جاكيت بومبر رياضي', 'جاكيت بومبر خفيف بتصميم عصري، مناسب للربيع والخريف.', 320, 'men'],
+            ['كارديجان صوف رجالي', 'كارديجان صوف دافئ بتصميم أنيق، مناسب للشتاء.', 280, 'men'],
+            ['قميص كتان صيفي', 'قميص كتان خفيف ومريح، مثالي للصيف.', 160, 'men'],
+            ['شورت رياضي مريح', 'شورت رياضي بقماش يسمح بالتهوية، مناسب للتمارين.', 90, 'men'],
+            ['حذاء كاجوال جلد', 'حذاء كاجوال من الجلد الطبيعي بتصميم أنيق.', 420, 'men'],
+            ['حذاء رسمي كلاسيك', 'حذاء رسمي كلاسيكي للبدلات والمناسبات.', 480, 'men'],
+            ['محفظة جلد رجالية', 'محفظة جلدية أنيقة بجيوب متعددة.', 140, 'men'],
+
+            ['فستان كاجوال قصير', 'فستان كاجوال بتصميم بسيط وأنيق، مناسب للخروج اليومي.', 280, 'women'],
+            ['بلوزة شيفون مشغولة', 'بلوزة شيفون بتفاصيل أنيقة، مثالية للمناسبات.', 220, 'women'],
+            ['بنطال جينز نسائي ضيق', 'بنطال جينز بقصة ضيقة، مرن ومريح.', 240, 'women'],
+            ['جاكيت بليزر نسائي', 'بليزر نسائي بقصة أنيقة، مناسب للعمل.', 380, 'women'],
+            ['كنزة صوف بياقة', 'كنزة صوف دافئة بياقة عالية، للشتاء.', 200, 'women'],
+            ['عباية كلاسيك سادة', 'عباية كلاسيكية بتصميم بسيط وأنيق.', 350, 'women'],
+            ['فستان زفاف بسيط', 'فستان زفاف بتصميم بسيط وأنيق.', 1500, 'women'],
+            ['حقيبة كتف صغيرة', 'حقيبة كتف صغيرة بتصميم عصري.', 260, 'women'],
+            ['حذاء كعب عالي', 'حذاء كعب عالي بتصميم أنيق للفترات الخاصة.', 340, 'women'],
+            ['شال حرير مطبوع', 'شال حرير ناعم بطبعة أنيقة.', 120, 'women'],
+
+            ['طقم أولادي رياضي', 'طقم رياضي للأولاد بقماش مريح.', 140, 'kids'],
+            ['فستان بناتي كاجوال', 'فستان بناتي بطبعة مسلية.', 130, 'kids'],
+            ['جاكيت أطفال شتوي', 'جاكيت شتوي دافئ للأطفال.', 200, 'kids'],
+            ['طقم أطفال قطني', 'طقم قطني مريح للأطفال.', 110, 'kids'],
+            ['حذاء أطفال رياض', 'حذاء رياضي خفيف ومريح.', 150, 'kids'],
+            ['طقم بيبي 3 قطع', 'طقم بيبي ناعم من 3 قطع.', 130, 'kids'],
+            ['قبعة أطفال شمس', 'قبعة بحماية من الشمس للأطفال.', 60, 'kids'],
+
+            ['طقم رياضي رجالي', 'طقم رياضي كامل بقطعتين.', 300, 'unisex'],
+            ['حذاء جري احترافي', 'حذاء جري بخفة عالية وامتصاص صدمات.', 450, 'unisex'],
+            ['تيشيرت رياضي نايك', 'تيشيرت رياضي بقماش يمنع التعرق.', 120, 'unisex'],
+            ['بنطال رياضي ضيق', 'بنطال رياضي مرن بقصة ضيقة.', 180, 'unisex'],
+            ['جاكيت رياضي خفيف', 'جاكيت رياضي خفيف للماراثون.', 260, 'unisex'],
+            ['كاب رياضي', 'كاب رياضي قابل للتعديل.', 70, 'unisex'],
+
+            ['ساعة يد ذكية', 'ساعة ذكية بشاشة لمسية ومراقبة نبضات.', 650, 'unisex'],
+            ['ساعة يد كلاسيكية', 'ساعة كلاسيكية بحزام جلد.', 550, 'men'],
+            ['نظارة شمسية بولارايزد', 'نظارة شمسية بحماية UV400.', 280, 'unisex'],
+            ['نظارة طبية إطار معدني', 'نظارة طبية بإطار معدني خفيف.', 200, 'unisex'],
+            ['حقيبة ظهر مدرسية', 'حقيبة ظهر واسعة بجيوب متعددة.', 220, 'unisex'],
+            ['حزام جلد عريض', 'حزام جلد عريض بإبزيم فضي.', 150, 'men'],
+            ['سكارف صوف', 'سكارف صوف ناعم ودافئ.', 100, 'unisex'],
+            ['قفازات شتوية', 'قفازات شتوية دافئة.', 80, 'unisex'],
+            ['محفظة نسائية صغيرة', 'محفظة نسائية أنيقة وصغيرة.', 120, 'women'],
+            ['حقيبة سفر متوسطة', 'حقيبة سفر متوسطة الحجم بعجلات.', 480, 'unisex'],
+            ['حقيبة يد فاخرة', 'حقيبة يد فاخرة بتصميم راقٍ.', 850, 'women'],
+            ['معطف شتوي طويل', 'معطف شتوي طويل بتصميم أنيق.', 620, 'women'],
+            ['بدلة رياضية نسائية', 'بدلة رياضية كاملة للنساء.', 320, 'women'],
+            ['حقيبة لابتوب محمية', 'حقيبة لابتوب بطبقة حماية.', 260, 'unisex'],
+            ['طقم أقلام فاخر', 'طقم أقلام فاخر بتغليف هدايا.', 180, 'unisex'],
         ];
 
-        foreach ($products as $data) {
-            $category = Category::where('slug', $data['category'])->first();
-            $subCategory = SubCategory::where('slug', $data['sub_category'])->first();
-            $brand = Brand::where('name', $data['brand'])->first();
-            $sizeGuide = $data['size_guide'] ? SizeGuide::where('name', $data['size_guide'])->first() : null;
+        $sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '36', '38', '40', '42', '44', 'One Size'];
 
-            if (!$category) {
+        $addedProducts = 0;
+        $addedVariants = 0;
+        $addedImages = 0;
+        $skipped = 0;
+
+        foreach ($productsData as $data) {
+            [$name, $description, $basePrice, $gender] = $data;
+
+            // تخطي إذا كان المنتج موجوداً بالاسم
+            if (Product::where('name', $name)->exists()) {
+                $skipped++;
                 continue;
             }
 
-            // ✅ إنشاء منتج مع خصم عشوائي لبعض المنتجات
+            // السعر مع الخصم
+            $price = $basePrice + rand(-30, 50);
+            $price = max(50, $price);
             $hasDiscount = rand(0, 1) === 1;
-            $discountPrice = $hasDiscount ? round($data['price'] * 0.85, 2) : null;
+            $discountPrice = $hasDiscount ? round($price * (1 - rand(10, 40) / 100), 2) : null;
 
-            Product::updateOrCreate(
-                ['slug' => Str::slug($data['name']) . '-' . uniqid()],
-                [
-                    'name'           => $data['name'],
-                    'slug'           => Str::slug($data['name']) . '-' . uniqid(),
-                    'description'    => $data['description'],
-                    'price'          => $data['price'],
-                    'discount_price' => $discountPrice,
-                    'is_active'      => true,
-                    'is_featured'    => $data['is_featured'],
-                    'category_id'    => $category->id,
-                    'sub_category_id'=> $subCategory?->id,
-                    'brand_id'       => $brand?->id,
-                    'size_guide_id'  => $sizeGuide?->id,
-                ]
-            );
+            // اختيار عشوائي للتصنيفات
+            $category = $categories->random();
+            $subCategory = $subCategories->isNotEmpty() && rand(0, 2) > 0 ? $subCategories->random() : null;
+            $brand = $brands->isNotEmpty() && rand(0, 2) > 0 ? $brands->random() : null;
+            $sizeGuide = !empty($sizeGuides) && rand(0, 1) === 1
+                ? $sizeGuides[array_rand($sizeGuides)]
+                : null;
+
+            $productData = [
+                'name'            => $name,
+                'description'     => $description,
+                'price'           => $price,
+                'discount_price'  => $discountPrice,
+                'is_active'       => true,
+                'is_featured'     => rand(0, 3) === 0,
+                'category_id'     => $category->id,
+                'sub_category_id' => $subCategory?->id,
+                'brand_id'        => $brand?->id,
+            ];
+
+            if ($hasSlug) $productData['slug'] = Str::slug($name) . '-' . uniqid();
+            if ($hasSizeGuide) $productData['size_guide_id'] = $sizeGuide;
+
+            $product = Product::create($productData);
+            $addedProducts++;
+
+            // متغيرات: 2-4 ألوان × 2-4 مقاسات
+            $randomColors = collect($colors)->random(min(rand(2, 4), count($colors)))->toArray();
+            $randomSizes = collect($sizes)->random(min(rand(2, 4), count($sizes)))->toArray();
+
+            foreach ($randomColors as $color) {
+                foreach ($randomSizes as $size) {
+                    ProductVariant::create([
+                        'product_id'     => $product->id,
+                        'color'          => $color,
+                        'size'           => $size,
+                        'stock_quantity' => rand(0, 10) === 0 ? 0 : rand(5, 40),
+                    ]);
+                    $addedVariants++;
+                }
+            }
+
+            // صور SVG (3-5 لكل منتج)
+            $imageCount = rand(3, 5);
+            for ($i = 0; $i < $imageCount; $i++) {
+                ProductImage::create([
+                    'product_id' => $product->id,
+                    'image_path' => 'data:image/svg+xml;base64,' . base64_encode(
+                        $this->generateSvg($name, $i + 1)
+                    ),
+                    'is_primary' => $i === 0,
+                ]);
+                $addedImages++;
+            }
         }
 
-        $this->command->info('✅ Products seeded: ' . Product::count() . ' products');
+        $this->command->line("   ✓ {$addedProducts} منتج جديد");
+        $this->command->line("   ✓ {$addedVariants} متغير");
+        $this->command->line("   ✓ {$addedImages} صورة");
+        if ($skipped > 0) {
+            $this->command->line("   ℹ {$skipped} منتج تم تخطيه (موجود مسبقاً)");
+        }
+        $this->command->line('   ℹ المجموع الآن: ' . Product::count() . ' منتج');
+    }
+
+    private function generateSvg(string $name, int $index): string
+    {
+        $short = mb_substr($name, 0, 25);
+        $palettes = [
+            ['bg' => '#E8F0F8', 'shape' => '#005a96', 'accent' => '#14b8a6'],
+            ['bg' => '#FEF3C7', 'shape' => '#D97706', 'accent' => '#F59E0B'],
+            ['bg' => '#DBEAFE', 'shape' => '#3B82F6', 'accent' => '#60A5FA'],
+            ['bg' => '#FCE7F3', 'shape' => '#EC4899', 'accent' => '#F472B6'],
+            ['bg' => '#D1FAE5', 'shape' => '#10B981', 'accent' => '#34D399'],
+            ['bg' => '#E0E7FF', 'shape' => '#6366F1', 'accent' => '#818CF8'],
+            ['bg' => '#FEE2E2', 'shape' => '#DC2626', 'accent' => '#F87171'],
+            ['bg' => '#F3E8FF', 'shape' => '#A855F7', 'accent' => '#C084FC'],
+        ];
+        $c = $palettes[($index - 1) % count($palettes)];
+
+        return <<<SVG
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" fill="none">
+    <rect width="600" height="800" fill="{$c['bg']}"/>
+    <rect x="60" y="100" width="480" height="600" rx="20" fill="white" opacity="0.5"/>
+    <circle cx="300" cy="240" r="70" fill="{$c['shape']}" opacity="0.9"/>
+    <rect x="180" y="340" width="240" height="180" rx="12" fill="{$c['accent']}" opacity="0.7"/>
+    <text x="300" y="620" font-family="Cairo, Arial, sans-serif" font-size="24" font-weight="bold" fill="#0f0f0f" text-anchor="middle">{$short}</text>
+    <text x="300" y="660" font-family="Cairo, Arial, sans-serif" font-size="16" fill="#6b6b5e" text-anchor="middle">صورة {$index}</text>
+</svg>
+SVG;
     }
 }

@@ -10,9 +10,7 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // ============================================
-        // 1. المشرف العام (Admin)
-        // ============================================
+        // 1. المشرف العام
         User::updateOrCreate(
             ['email' => 'admin@matjari.com'],
             [
@@ -24,9 +22,7 @@ class UserSeeder extends Seeder
             ]
         );
 
-        // ============================================
-        // 2. المديرون (Managers) — صلاحيات محددة
-        // ============================================
+        // 2. المديرون
         $managers = [
             [
                 'name'        => 'أحمد المدير',
@@ -61,9 +57,7 @@ class UserSeeder extends Seeder
             );
         }
 
-        // ============================================
-        // 3. الزبائن (Customers)
-        // ============================================
+        // 3. الزبائن الأساسيون
         $customers = [
             ['name' => 'محمد العميل',   'email' => 'mohamed@test.com', 'phone' => '0599111111'],
             ['name' => 'فاطمة الزهراء', 'email' => 'fatima@test.com',  'phone' => '0599222222'],
@@ -85,6 +79,6 @@ class UserSeeder extends Seeder
             );
         }
 
-        $this->command->info('✅ Users seeded: 1 admin + 3 managers + 5 customers');
+        $this->command->info('Users seeded: 1 admin + 3 managers + 5 customers');
     }
 }

@@ -2,37 +2,289 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ==================================================
-   أنيميشنات الإشعارات اللحظية
-   ================================================== */
+@layer base {
+    :root {
+        --bg: 250 250 249;
+        --bg-soft: 245 245 244;
+        --surface: 255 255 255;
+        --border: 230 230 228;
+        --border-strong: 200 200 198;
+        --text: 15 15 15;
+        --text-soft: 42 42 42;
+        --text-muted: 107 107 94;
+        --text-faint: 154 154 140;
+        --forest: 0 90 150;
+        --gold: 20 184 166;
 
-@keyframes ping-once {
-    0%   { transform: scale(1); }
-    50%  { transform: scale(1.4); }
-    100% { transform: scale(1); }
+        color-scheme: light;
+    }
+
+    .dark {
+        --bg: 6 22 38;
+        --bg-soft: 10 30 50;
+        --surface: 13 36 58;
+        --surface-muted: 20 46 72;
+        --surface-elevated: 13 36 58;
+        --border: 26 55 85;
+        --border-strong: 40 75 110;
+
+        --text: 235 242 250;
+        --text-soft: 200 215 230;
+        --text-muted: 140 165 190;
+        --text-faint: 100 125 150;
+
+        --forest: 0 90 150;
+        --gold: 20 184 166;
+
+        color-scheme: dark;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: 'Cairo', system-ui, sans-serif;
+        background-color: rgb(var(--bg));
+        color: rgb(var(--text));
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: 'IBM Plex Sans Arabic', 'Cairo', system-ui, sans-serif;
+        font-weight: 700;
+        text-wrap: balance;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+
+    /* ==========================================
+       Native Select & Option — FIX (light + dark)
+       ========================================== */
+    select {
+        color-scheme: light;
+        background-color: #ffffff;
+        color: #0f0f0f;
+    }
+
+    select:focus {
+        outline: none;
+    }
+
+    select option {
+        background-color: #ffffff !important;
+        color: #0f0f0f !important;
+        padding: 8px 12px;
+    }
+
+    select option:checked,
+    select option:hover,
+    select option:focus {
+        background-color: #f0f4f8 !important;
+        color: #005a96 !important;
+    }
+
+    .dark select {
+        color-scheme: dark;
+        background-color: #0d243a;
+        color: #ebf2fa;
+    }
+
+    .dark select option {
+        background-color: #0d243a !important;
+        color: #ebf2fa !important;
+    }
+
+    .dark select option:checked,
+    .dark select option:hover,
+    .dark select option:focus {
+        background-color: #005a96 !important;
+        color: #ffffff !important;
+    }
 }
 
-.animate-ping-once {
-    animation: ping-once 0.4s ease-out;
+@layer components {
+    .container-x {
+        @apply mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12;
+    }
+
+    .container-narrow {
+        @apply mx-auto w-full max-w-5xl px-5 sm:px-8;
+    }
+
+    .btn {
+        @apply inline-flex items-center justify-center gap-3 px-7 py-3.5 text-sm font-semibold tracking-wide transition-all duration-300;
+        border-radius: 4px;
+    }
+
+    .btn-solid {
+        @apply btn bg-ink text-cream dark:bg-cream dark:text-ink hover:bg-forest dark:hover:bg-forest dark:hover:text-cream;
+    }
+
+    .btn-outline {
+        @apply btn border border-ink/20 dark:border-cream/20 text-ink dark:text-cream hover:bg-ink hover:text-cream dark:hover:bg-cream dark:hover:text-ink;
+    }
+
+    .btn-brand {
+        @apply btn text-white;
+        background-color: rgb(20, 184, 166);
+    }
+
+    .btn-brand:hover {
+        background-color: rgb(15, 118, 110);
+    }
+
+    .eyebrow {
+        @apply text-xs font-medium uppercase tracking-[0.2em] text-ink-muted dark:text-cream/60;
+    }
+
+    .display-1 {
+        @apply font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold leading-[0.95];
+        letter-spacing: -0.05em;
+    }
+
+    .display-2 {
+        @apply font-display text-4xl sm:text-5xl md:text-6xl font-bold leading-[1];
+        letter-spacing: -0.03em;
+    }
+
+    .link-arrow {
+        @apply inline-flex items-center gap-2 text-sm font-semibold text-ink dark:text-cream transition-all duration-300;
+    }
+
+    .link-arrow svg {
+        transition: transform 0.3s ease;
+    }
+
+    .link-arrow:hover svg {
+        transform: translateX(-6px);
+    }
+
+    .link-arrow:hover {
+        color: rgb(20, 184, 166);
+    }
+
+    .product-tile {
+        @apply relative block;
+    }
+
+    .product-tile-media {
+        @apply relative overflow-hidden bg-cream-warm dark:bg-ink-soft;
+        aspect-ratio: 3 / 4;
+    }
+
+    .product-tile-media img {
+        @apply w-full h-full object-cover transition-transform duration-700 ease-out;
+    }
+
+    .product-tile:hover .product-tile-media img {
+        transform: scale(1.06);
+    }
 }
 
-.fade-in-notif {
-    animation: fadeInNotif 0.3s ease-out;
+@layer utilities {
+    .text-balance {
+        text-wrap: balance;
+    }
+
+    .text-pretty {
+        text-wrap: pretty;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .reveal {
+        opacity: 0;
+        transform: translateY(32px);
+        transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .reveal.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .bg-surface {
+        background-color: rgb(var(--surface));
+    }
+
+    .bg-canvas {
+        background-color: rgb(var(--bg));
+    }
+
+    .text-forest {
+        color: rgb(0, 90, 150);
+    }
+
+    .bg-forest {
+        background-color: rgb(0, 90, 150);
+    }
+
+    .dark .text-forest {
+        color: rgb(90, 165, 220);
+    }
+
+    .dark .bg-forest {
+        background-color: rgb(8, 55, 95);
+    }
+
+    .text-brand {
+        color: rgb(20, 184, 166);
+    }
+
+    .bg-brand {
+        background-color: rgb(20, 184, 166);
+    }
+
+    .dark .text-brand {
+        color: rgb(45, 212, 191);
+    }
+
+    .dark .bg-brand {
+        background-color: rgb(20, 184, 166);
+    }
 }
 
-@keyframes fadeInNotif {
-    from { opacity: 0; transform: translateX(-8px); }
-    to   { opacity: 1; transform: translateX(0); }
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .reveal {
+        opacity: 1;
+        transform: none;
+    }
 }
 
-/* ==================================================
-   تحسينات إضافية
-   ================================================== */
-
-[x-cloak] {
-    display: none !important;
+/* ==========================================
+   Hide number input spinners
+   ========================================== */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
-div{
-    color:#005a96
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
 }

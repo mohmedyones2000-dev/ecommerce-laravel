@@ -5,68 +5,93 @@ namespace Database\Seeders;
 use App\Models\Category;
 use App\Models\SubCategory;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class SubCategorySeeder extends Seeder
 {
     public function run(): void
     {
-        // ✅ ربط كل تصنيف فرعي بتصنيف رئيسي
+        $this->command->info('→ إضافة 20 تصنيف فرعي جديد...');
+
+        // 20 تصنيف فرعي إضافي (لا تكرر SubCategorySeeder)
         $data = [
-            // رجالي
+            // رجالي (4 إضافية)
             'men-clothing' => [
-                ['name' => 'قمصان',    'slug' => 'men-shirts'],
-                ['name' => 'بناطيل',   'slug' => 'men-pants'],
-                ['name' => 'تيشيرتات', 'slug' => 'men-tshirts'],
-                ['name' => 'جاكيتات',  'slug' => 'men-jackets'],
-                ['name' => 'بدلات',    'slug' => 'men-suits'],
+                ['name' => 'أوشحة',       'slug' => 'men-scarves'],
+                ['name' => 'معاطف',       'slug' => 'men-coats'],
+                ['name' => 'شورتات',      'slug' => 'men-shorts'],
+                ['name' => 'ملابس داخلية', 'slug' => 'men-underwear'],
             ],
-            // نسائي
+            // نسائي (4 إضافية)
             'women-clothing' => [
-                ['name' => 'فساتين',   'slug' => 'women-dresses'],
-                ['name' => 'بلوزات',   'slug' => 'women-blouses'],
-                ['name' => 'تنانير',   'slug' => 'women-skirts'],
-                ['name' => 'عبايات',   'slug' => 'women-abayas'],
-                ['name' => 'جاكيتات نسائية', 'slug' => 'women-jackets'],
+                ['name' => 'كنزات',       'slug' => 'women-sweaters'],
+                ['name' => 'أطقم نسائية',  'slug' => 'women-sets'],
+                ['name' => 'جوارب',       'slug' => 'women-socks'],
+                ['name' => 'ملابس نوم',   'slug' => 'women-sleepwear'],
             ],
-            // أطفال
+            // أطفال (3 إضافية)
             'kids-clothing' => [
-                ['name' => 'أولادي',       'slug' => 'kids-boys'],
-                ['name' => 'بناتي',        'slug' => 'kids-girls'],
-                ['name' => 'حديثي الولادة', 'slug' => 'kids-newborn'],
+                ['name' => 'طقم ولادي',   'slug' => 'kids-sets'],
+                ['name' => 'جاكيتات أطفال', 'slug' => 'kids-jackets'],
+                ['name' => 'أحذية أطفال',  'slug' => 'kids-shoes'],
             ],
-            // رياضي
+            // رياضي (3 إضافية)
             'sportswear' => [
-                ['name' => 'أطقم رياضية',   'slug' => 'sport-sets'],
-                ['name' => 'أحذية رياضية',  'slug' => 'sport-shoes'],
-                ['name' => 'إكسسوارات رياضية', 'slug' => 'sport-accessories'],
+                ['name' => 'بناطيل رياضية', 'slug' => 'sport-pants'],
+                ['name' => 'تيشيرتات رياضية', 'slug' => 'sport-tshirts'],
+                ['name' => 'جاكيتات رياضية', 'slug' => 'sport-jackets'],
             ],
-            // إكسسوارات
+            // إكسسوارات (6 إضافية)
             'accessories' => [
-                ['name' => 'حقائب',  'slug' => 'accessory-bags'],
-                ['name' => 'أحزمة',  'slug' => 'accessory-belts'],
-                ['name' => 'قبعات',  'slug' => 'accessory-hats'],
-                ['name' => 'ساعات',  'slug' => 'accessory-watches'],
+                ['name' => 'نظارات',      'slug' => 'accessory-glasses'],
+                ['name' => 'محافظ',       'slug' => 'accessory-wallets'],
+                ['name' => 'حقائب ظهر',   'slug' => 'accessory-backpacks'],
+                ['name' => 'مجوهرات',     'slug' => 'accessory-jewelry'],
+                ['name' => 'عطور',        'slug' => 'accessory-perfumes'],
+                ['name' => 'أقلام فاخرة', 'slug' => 'accessory-pens'],
             ],
         ];
+
+        $hasSlug = Schema::hasColumn('sub_categories', 'slug');
+        $hasPivot = Schema::hasTable('category_sub_category');
+
+        $added = 0;
+        $skipped = 0;
 
         foreach ($data as $categorySlug => $subCategories) {
             $category = Category::where('slug', $categorySlug)->first();
 
             if (!$category) {
+                $this->command->warn("   ⚠ تصنيف رئيسي غير موجود: {$categorySlug}");
                 continue;
             }
 
-            foreach ($subCategories as $subCategory) {
-                $sub = SubCategory::updateOrCreate(
-                    ['slug' => $subCategory['slug']],
-                    $subCategory
-                );
+            foreach ($subCategories as $subData) {
+                // فحص التكرار بالاسم
+                if (SubCategory::where('name', $subData['name'])->exists()) {
+                    $skipped++;
+                    continue;
+                }
 
-                // ✅ ربط التصنيف الفرعي بالتصنيف الرئيسي (many-to-many)
-                $sub->categories()->syncWithoutDetaching([$category->id]);
+                $createData = ['name' => $subData['name']];
+                if ($hasSlug) {
+                    $createData['slug'] = $subData['slug'];
+                }
+
+                $sub = SubCategory::create($createData);
+                $added++;
+
+                // ربط بالتصنيف الرئيسي
+                if ($hasPivot) {
+                    $sub->categories()->syncWithoutDetaching([$category->id]);
+                }
             }
         }
 
-        $this->command->info('✅ SubCategories seeded: ' . SubCategory::count() . ' subcategories');
+        $this->command->line("   ✓ {$added} تصنيف فرعي جديد");
+        if ($skipped > 0) {
+            $this->command->line("   ℹ {$skipped} تم تخطيه (موجود مسبقاً)");
+        }
+        $this->command->line('   ℹ المجموع الآن: ' . SubCategory::count() . ' تصنيف فرعي');
     }
 }

@@ -6,70 +6,86 @@ use App\Models\Color;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class ProductVariantSeeder extends Seeder
 {
     public function run(): void
     {
-        $products = Product::all();
-        $sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+        $this->command->info('→ إضافة variants للمنتجات التي بلا variants...');
+
+        $products = Product::doesntHave('variants')->get();
+
+        if ($products->isEmpty()) {
+            $this->command->line('   ℹ جميع المنتجات لديها variants بالفعل');
+            return;
+        }
+
+        // جلب الألوان (مع احتياطي لو scope active غير موجود)
+        $colors = method_exists(Color::class, 'scopeActive')
+            ? Color::active()->get()
+            : Color::all();
+
+        if ($colors->isEmpty()) {
+            $this->command->error('   ✗ لا توجد ألوان');
+            return;
+        }
+
+        $clothingSizes = ['S', 'M', 'L', 'XL', 'XXL'];
         $shoeSizes = ['38', '39', '40', '41', '42', '43', '44'];
         $kidsSizes = ['2-3 سنوات', '4-5 سنوات', '6-7 سنوات', '8-9 سنوات'];
 
-        $colors = Color::active()->get();
+        $hasHex = Schema::hasColumn('product_variants', 'hex_code');
+        $hasPrice = Schema::hasColumn('product_variants', 'price');
+        $hasDiscount = Schema::hasColumn('product_variants', 'discount_price');
+
+        $variantsCreated = 0;
 
         foreach ($products as $product) {
-            // ✅ تحديد المقاسات
-            $availableSizes = $this->getSizesForProduct($product, $sizes, $shoeSizes, $kidsSizes);
-
-            // ✅ اختيار 3-5 ألوان لكل منتج
-            $productColors = $colors->random(min(rand(3, 5), $colors->count()));
+            $sizes = $this->getSizesForProduct($product, $clothingSizes, $shoeSizes, $kidsSizes);
+            $productColors = $colors->random(min(rand(2, 4), $colors->count()));
 
             foreach ($productColors as $color) {
-                foreach ($availableSizes as $size) {
-                    ProductVariant::create([
+                foreach ($sizes as $size) {
+                    $data = [
                         'product_id'     => $product->id,
                         'color'          => $color->name,
-                        'hex_code'       => $color->hex_code,
                         'size'           => $size,
-                        'stock_quantity' => rand(5, 50),
-                        'price'          => $product->price,
-                        'discount_price' => $product->discount_price,
-                    ]);
+                        'stock_quantity' => rand(5, 40),
+                    ];
+
+                    if ($hasHex) $data['hex_code'] = $color->hex_code;
+                    if ($hasPrice) $data['price'] = $product->price;
+                    if ($hasDiscount) $data['discount_price'] = $product->discount_price;
+
+                    ProductVariant::create($data);
+                    $variantsCreated++;
                 }
             }
         }
 
-        $this->command->info('✅ Product variants seeded: ' . ProductVariant::count() . ' variants');
+        $this->command->line("   ✓ {$variantsCreated} متغير جديد لـ {$products->count()} منتج");
+        $this->command->line('   ℹ المجموع الآن: ' . ProductVariant::count() . ' متغير');
     }
 
-    /**
-     * ✅ تحديد المقاسات المناسبة (بدون gender)
-     */
-    private function getSizesForProduct($product, $clothingSizes, $shoeSizes, $kidsSizes): array
+    private function getSizesForProduct($product, $clothing, $shoes, $kids): array
     {
-        // ✅ أحذية
-        if (str_contains($product->name, 'حذاء')) {
-            return array_slice($shoeSizes, 0, rand(3, 5));
-        }
+        $name = $product->name;
 
-        // ✅ أطفال
-        if (str_contains($product->name, 'أولادي') || 
-            str_contains($product->name, 'بناتي') || 
-            str_contains($product->name, 'حديثي الولادة') ||
-            str_contains($product->name, 'أطفال')) {
-            return array_slice($kidsSizes, 0, rand(2, 4));
+        if (str_contains($name, 'حذاء')) {
+            return array_slice($shoes, 0, rand(3, 5));
         }
-
-        // ✅ إكسسوارات (مقاس واحد)
-        if (str_contains($product->name, 'حقيبة') || 
-            str_contains($product->name, 'حزام') ||
-            str_contains($product->name, 'قبعة') || 
-            str_contains($product->name, 'ساعة')) {
+        if (str_contains($name, 'أولادي') || str_contains($name, 'بناتي') ||
+            str_contains($name, 'حديثي الولادة') || str_contains($name, 'أطفال') ||
+            str_contains($name, 'بيبي')) {
+            return array_slice($kids, 0, rand(2, 4));
+        }
+        if (str_contains($name, 'حقيبة') || str_contains($name, 'حزام') ||
+            str_contains($name, 'قبعة') || str_contains($name, 'ساعة') ||
+            str_contains($name, 'محفظة') || str_contains($name, 'نظارة') ||
+            str_contains($name, 'سكارف')) {
             return ['One Size'];
         }
-
-        // ✅ ملابس عادية
-        return array_slice($clothingSizes, 0, rand(3, 5));
+        return array_slice($clothing, 0, rand(3, 5));
     }
 }

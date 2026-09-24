@@ -4,18 +4,48 @@
 
 @section('content')
 
-    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="container-x pt-12 lg:pt-16 pb-24">
 
-        <div class="mb-8">
-            <h1 class="text-2xl md:text-3xl font-bold mb-1.5" style="color: var(--text-primary);">المفضلة</h1>
-            <p class="text-[13px]" style="color: var(--text-secondary);">
-                {{ $wishlists->count() }} {{ $wishlists->count() == 1 ? 'منتج' : 'منتجات' }} في المفضلة
-            </p>
-        </div>
+        {{-- ════════════ HEADER ════════════ --}}
+        <header class="mb-12 lg:mb-16 pb-8 border-b border-stone-200 dark:border-stone-800">
+            <nav class="flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.2em] text-ink-faint dark:text-cream/40 mb-8"
+                aria-label="breadcrumb">
+                <a href="{{ route('home') }}" class="hover:text-forest dark:hover:text-gold transition-colors">الرئيسية</a>
+                <span class="opacity-40">/</span>
+                <span class="text-ink dark:text-cream">المفضلة</span>
+            </nav>
+
+            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+                <div>
+                    <span class="eyebrow block mb-4">— قائمتك المحفوظة</span>
+                    <h1 class="display-2 mb-4 text-balance">
+                        المنتجات
+                        <span class="text-forest dark:text-gold">المفضلة</span>
+                    </h1>
+                    <p class="text-base text-ink-muted dark:text-cream/60 text-pretty max-w-md">
+                        @if($wishlists->count())
+                            لديك {{ $wishlists->count() }} {{ $wishlists->count() == 1 ? 'منتج' : 'منتجات' }} محفوظة في مفضلتك.
+                        @else
+                            احفظ منتجاتك المفضلة هنا للوصول إليها لاحقاً.
+                        @endif
+                    </p>
+                </div>
+
+                @if($wishlists->count())
+                    <a href="{{ route('products.index') }}" class="link-arrow shrink-0">
+                        تصفح المزيد
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </a>
+                @endif
+            </div>
+        </header>
 
         @if($wishlists->count())
 
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5" id="wishlistGrid">
+            {{-- ════════════ GRID ════════════ --}}
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-12 md:gap-x-6 md:gap-y-16" id="wishlistGrid">
                 @foreach($wishlists as $wishlist)
                     @if($wishlist->product)
                         <div data-wishlist-item="{{ $wishlist->product->id }}">
@@ -27,26 +57,34 @@
 
         @else
 
-            <div class="rounded-xl border p-14 text-center max-w-lg mx-auto"
-                style="background-color: var(--bg-primary); border-color: var(--border-light);">
-                <div class="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-5"
-                    style="background-color: var(--bg-tertiary);">
-                    <svg class="w-8 h-8" style="color: var(--text-tertiary);" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            {{-- ════════════ EMPTY STATE ════════════ --}}
+            <div class="text-center py-20 max-w-lg mx-auto">
+
+                <div class="w-24 h-24 mx-auto mb-8 flex items-center justify-center border border-stone-300 dark:border-stone-700"
+                    style="border-radius: 4px;">
+                    <svg class="w-10 h-10 text-ink-faint dark:text-cream/30" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24" stroke-width="1">
+                        <path stroke-linecap="round" stroke-linejoin="round"
                             d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
                 </div>
-                <h2 class="text-lg font-bold mb-2" style="color: var(--text-primary);">المفضلة فارغة</h2>
-                <p class="text-[13px] mb-6" style="color: var(--text-secondary);">
-                    لم تقم بإضافة أي منتجات إلى المفضلة بعد
+
+                <span class="eyebrow block mb-4">— المفضلة فارغة</span>
+
+                <h2 class="display-2 mb-4 text-balance">
+                    لم تُضف أي
+                    <span class="text-forest dark:text-gold">منتج بعد</span>
+                </h2>
+
+                <p class="text-base text-ink-muted dark:text-cream/60 mb-10 text-pretty">
+                    ابدأ باستكشاف منتجاتنا واحفظ ما يعجبك بضغطة واحدة.
                 </p>
-                <a href="{{ route('products.index') }}"
-                    class="inline-flex items-center gap-2 h-11 px-6 rounded-lg font-semibold text-[13px] text-white transition-all duration-200 hover:opacity-90"
-                    style="background-color: var(--gold);">
+
+                <a href="{{ route('products.index') }}" class="btn-solid group">
                     ابدأ التسوق
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
                     </svg>
                 </a>
             </div>
@@ -59,9 +97,9 @@
         document.addEventListener('DOMContentLoaded', function () {
             const observer = new MutationObserver(function () {
                 document.querySelectorAll('[data-wishlist-item]').forEach(function (item) {
-                    const wishlistBtn = item.querySelector('.wishlist-icon');
-
-                    if (wishlistBtn && wishlistBtn.closest('button')?.dataset.inWishlist === '0') {
+                    const wishlistIcon = item.querySelector('.wishlist-icon');
+                    const btn = wishlistIcon?.closest('button');
+                    if (btn && btn.dataset.inWishlist === '0') {
                         item.remove();
                     }
                 });

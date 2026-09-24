@@ -12,9 +12,8 @@ class ProductSearch extends Component
 {
     use WithPagination;
 
-    // ✅ فلاتر البحث
     public string $search = '';
-    public ?int $category = null;
+    public ?string $category = null;
     public ?int $brand = null;
     public ?string $gender = null;
     public ?string $stock_status = null;
@@ -23,7 +22,6 @@ class ProductSearch extends Component
     public ?float $max_price = null;
     public string $sort = 'latest';
 
-    // ✅ لتحديث URL عند تغيير الفلاتر
     protected $queryString = [
         'search'       => ['except' => ''],
         'category'     => ['except' => null],
@@ -36,12 +34,8 @@ class ProductSearch extends Component
         'sort'         => ['except' => 'latest'],
     ];
 
-    /**
-     * ✅ إعادة تعيين pagination عند تغيير أي فلتر
-     */
     public function updating($property): void
     {
-        // إذا تغيّر أي فلتر — نعود للصفحة الأولى
         if (in_array($property, [
             'search', 'category', 'brand', 'gender',
             'stock_status', 'has_discount', 'min_price', 'max_price', 'sort'
@@ -50,9 +44,6 @@ class ProductSearch extends Component
         }
     }
 
-    /**
-     * ✅ إعادة تعيين كل الفلاتر
-     */
     public function resetFilters(): void
     {
         $this->reset([
@@ -63,16 +54,13 @@ class ProductSearch extends Component
         $this->resetPage();
     }
 
-    /**
-     * ✅ عرض المكون
-     */
     public function render()
     {
         $products = Product::query()
-            ->with([ 'variants', 'category', 'brand'])
+            ->with(['variants', 'category', 'brand'])
             ->where('is_active', true)
             ->search($this->search)
-            ->category($this->category)
+            ->category($this->resolveCategoryId())
             ->brand($this->brand)
             ->gender($this->gender)
             ->stockStatus($this->stock_status)
@@ -86,5 +74,18 @@ class ProductSearch extends Component
             'categories' => Category::orderBy('name')->get(),
             'brands' => Brand::orderBy('name')->get(),
         ]);
+    }
+
+    protected function resolveCategoryId(): ?int
+    {
+        if (empty($this->category)) {
+            return null;
+        }
+
+        if (is_numeric($this->category)) {
+            return (int) $this->category;
+        }
+
+        return Category::where('slug', $this->category)->value('id');
     }
 }

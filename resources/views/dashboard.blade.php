@@ -4,243 +4,240 @@
 
 @section('content')
 
-    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="container-x pt-12 lg:pt-16 pb-24">
 
-        <div class="rounded-xl p-6 md:p-8 mb-6" style="background-color: var(--gold-soft); border: 1px solid var(--border-light);">
-            <h1 class="text-xl md:text-2xl font-bold mb-1" style="color: var(--text-primary);">
-                مرحباً، {{ $user->name }}
-            </h1>
-            <p class="text-[13px]" style="color: var(--text-secondary);">نتمنى لك تجربة تسوق رائعة</p>
-        </div>
+    {{-- ════════════ WELCOME HEADER ════════════ --}}
+    <header class="mb-12 lg:mb-16 pb-10 border-b border-stone-200 dark:border-stone-800">
+        <span class="eyebrow block mb-4">— حسابي</span>
+        <h1 class="display-2 mb-4 text-balance">
+            مرحباً،
+            <span class="text-forest dark:text-gold">{{ $user->name }}</span>
+        </h1>
+        <p class="text-base text-ink-muted dark:text-cream/60 text-pretty max-w-md">
+            نظرة سريعة على نشاطك في المتجر.
+        </p>
+    </header>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+    {{-- ════════════ STATS GRID ════════════ --}}
+    @php
+        $statCards = [
+            [
+                'route' => 'orders.index',
+                'value' => $stats['total_orders'],
+                'label' => 'إجمالي الطلبات',
+                'icon'  => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
+                'color' => 'text-forest dark:text-gold',
+                'bg'    => 'bg-forest/5 dark:bg-gold/10',
+            ],
+            [
+                'route' => 'orders.index',
+                'value' => $stats['pending_orders'],
+                'label' => 'قيد المراجعة',
+                'icon'  => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+                'color' => 'text-amber-600 dark:text-amber-400',
+                'bg'    => 'bg-amber-50 dark:bg-amber-950/30',
+            ],
+            [
+                'route' => 'orders.index',
+                'value' => $stats['delivered_orders'],
+                'label' => 'تم التوصيل',
+                'icon'  => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+                'color' => 'text-green-600 dark:text-green-400',
+                'bg'    => 'bg-green-50 dark:bg-green-950/30',
+            ],
+            [
+                'route' => 'wishlist.index',
+                'value' => $stats['wishlist_count'],
+                'label' => 'في المفضلة',
+                'icon'  => 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z',
+                'color' => 'text-rose-600 dark:text-rose-400',
+                'bg'    => 'bg-rose-50 dark:bg-rose-950/30',
+            ],
+        ];
+    @endphp
 
-            <a href="{{ route('orders.index') }}"
-               class="rounded-xl border p-4 transition-all duration-200 hover:-translate-y-0.5"
-               style="background-color: var(--bg-primary); border-color: var(--border-light);"
-               onmouseover="this.style.borderColor='var(--gold)';"
-               onmouseout="this.style.borderColor='var(--border-light)';">
-                <div class="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
-                     style="background-color: #dbeafe; color: #1d4ed8;">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+        @foreach($statCards as $card)
+            <a href="{{ route($card['route']) }}"
+               class="group relative border border-stone-200 dark:border-stone-800 hover:border-forest dark:hover:border-gold p-6 transition-all duration-200 overflow-hidden"
+               style="border-radius: 4px;">
+
+                {{-- Icon --}}
+                <div class="w-11 h-11 flex items-center justify-center mb-5 {{ $card['bg'] }} {{ $card['color'] }}" style="border-radius: 4px;">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="{{ $card['icon'] }}" />
                     </svg>
                 </div>
-                <p class="text-2xl font-bold mb-0.5" style="color: var(--text-primary);">{{ $stats['total_orders'] }}</p>
-                <p class="text-[12px]" style="color: var(--text-secondary);">إجمالي الطلبات</p>
-            </a>
 
-            <a href="{{ route('orders.index') }}"
-               class="rounded-xl border p-4 transition-all duration-200 hover:-translate-y-0.5"
-               style="background-color: var(--bg-primary); border-color: var(--border-light);"
-               onmouseover="this.style.borderColor='var(--gold)';"
-               onmouseout="this.style.borderColor='var(--border-light)';">
-                <div class="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
-                     style="background-color: #fef3c7; color: #b45309;">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                {{-- Value --}}
+                <p class="font-display text-4xl font-bold tracking-tight text-ink dark:text-cream mb-2">
+                    {{ $card['value'] }}
+                </p>
+
+                {{-- Label --}}
+                <p class="text-[10px] font-semibold tracking-widest uppercase text-ink-muted dark:text-cream/50">
+                    {{ $card['label'] }}
+                </p>
+
+                {{-- Hover arrow --}}
+                <svg class="absolute top-6 left-6 w-4 h-4 text-ink-faint dark:text-cream/30 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+            </a>
+        @endforeach
+    </div>
+
+    {{-- ════════════ MAIN GRID ════════════ --}}
+    <div class="grid lg:grid-cols-12 gap-8">
+
+        {{-- ─── QUICK MENU ─── --}}
+        <aside class="lg:col-span-4">
+            <div class="border border-stone-200 dark:border-stone-800" style="border-radius: 4px;">
+
+                <div class="px-6 py-5 border-b border-stone-200 dark:border-stone-800">
+                    <span class="text-[10px] font-semibold tracking-widest uppercase text-ink-muted dark:text-cream/60">
+                        القائمة السريعة
+                    </span>
                 </div>
-                <p class="text-2xl font-bold mb-0.5" style="color: var(--text-primary);">{{ $stats['pending_orders'] }}</p>
-                <p class="text-[12px]" style="color: var(--text-secondary);">قيد المراجعة</p>
-            </a>
 
-            <a href="{{ route('orders.index') }}"
-               class="rounded-xl border p-4 transition-all duration-200 hover:-translate-y-0.5"
-               style="background-color: var(--bg-primary); border-color: var(--border-light);"
-               onmouseover="this.style.borderColor='var(--gold)';"
-               onmouseout="this.style.borderColor='var(--border-light)';">
-                <div class="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
-                     style="background-color: #d1fae5; color: #047857;">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-                <p class="text-2xl font-bold mb-0.5" style="color: var(--text-primary);">{{ $stats['delivered_orders'] }}</p>
-                <p class="text-[12px]" style="color: var(--text-secondary);">تم التوصيل</p>
-            </a>
+                @php
+                    $unreadNotifCount = \App\Models\Notification::where('user_id', auth()->id())->whereNull('read_at')->count();
 
-            <a href="{{ route('wishlist.index') }}"
-               class="rounded-xl border p-4 transition-all duration-200 hover:-translate-y-0.5"
-               style="background-color: var(--bg-primary); border-color: var(--border-light);"
-               onmouseover="this.style.borderColor='var(--gold)';"
-               onmouseout="this.style.borderColor='var(--border-light)';">
-                <div class="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
-                     style="background-color: #fee2e2; color: #b91c1c;">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                </div>
-                <p class="text-2xl font-bold mb-0.5" style="color: var(--text-primary);">{{ $stats['wishlist_count'] }}</p>
-                <p class="text-[12px]" style="color: var(--text-secondary);">في المفضلة</p>
-            </a>
-        </div>
+                    $menuItems = [
+                        ['route' => 'orders.index',        'label' => 'طلباتي',        'icon' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'],
+                        ['route' => 'wishlist.index',      'label' => 'المفضلة',       'icon' => 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z'],
+                        ['route' => 'notifications.index', 'label' => 'الإشعارات',     'icon' => 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9', 'badge' => $unreadNotifCount],
+                        ['route' => 'profile.edit',        'label' => 'الملف الشخصي', 'icon' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
+                        ['route' => 'cart.index',          'label' => 'سلة المشتريات', 'icon' => 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z'],
+                    ];
+                @endphp
 
-        <div class="grid md:grid-cols-3 gap-5">
+                <div class="p-3">
+                    @foreach($menuItems as $item)
+                        <a href="{{ route($item['route']) }}"
+                           class="group flex items-center justify-between gap-4 px-4 py-3.5 hover:bg-stone-50 dark:hover:bg-zinc-900 transition-colors"
+                           style="border-radius: 4px;">
 
-            <div class="md:col-span-1">
-                <div class="rounded-xl border overflow-hidden" style="background-color: var(--bg-primary); border-color: var(--border-light);">
-                    <div class="px-5 py-4 border-b" style="border-color: var(--border-light);">
-                        <h2 class="text-[14px] font-semibold" style="color: var(--text-primary);">القائمة السريعة</h2>
-                    </div>
-
-                    @php
-                        $unreadNotifCount = \App\Models\Notification::where('user_id', auth()->id())->whereNull('read_at')->count();
-                    @endphp
-
-                    <div class="p-2">
-                        <a href="{{ route('orders.index') }}"
-                           class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-150"
-                           onmouseover="this.style.backgroundColor='var(--bg-tertiary)';"
-                           onmouseout="this.style.backgroundColor='transparent';">
-                            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: var(--gold-soft); color: var(--gold);">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                </svg>
-                            </div>
-                            <span class="text-[13px] font-medium" style="color: var(--text-primary);">طلباتي</span>
-                        </a>
-
-                        <a href="{{ route('wishlist.index') }}"
-                           class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-150"
-                           onmouseover="this.style.backgroundColor='var(--bg-tertiary)';"
-                           onmouseout="this.style.backgroundColor='transparent';">
-                            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: var(--gold-soft); color: var(--gold);">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                </svg>
-                            </div>
-                            <span class="text-[13px] font-medium" style="color: var(--text-primary);">المفضلة</span>
-                        </a>
-
-                        <a href="{{ route('notifications.index') }}"
-                           class="flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors duration-150"
-                           onmouseover="this.style.backgroundColor='var(--bg-tertiary)';"
-                           onmouseout="this.style.backgroundColor='transparent';">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: var(--gold-soft); color: var(--gold);">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            <span class="flex items-center gap-4">
+                                <span class="w-9 h-9 flex items-center justify-center bg-forest/5 dark:bg-gold/10 text-forest dark:text-gold group-hover:bg-forest group-hover:text-cream dark:group-hover:bg-gold dark:group-hover:text-ink transition-colors" style="border-radius: 4px;">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="{{ $item['icon'] }}" />
                                     </svg>
-                                </div>
-                                <span class="text-[13px] font-medium" style="color: var(--text-primary);">الإشعارات</span>
-                            </div>
-                            @if($unreadNotifCount > 0)
-                                <span class="text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center" style="background-color: #dc2626;">
-                                    {{ $unreadNotifCount > 9 ? '9+' : $unreadNotifCount }}
                                 </span>
-                            @endif
-                        </a>
+                                <span class="font-display text-sm font-bold text-ink dark:text-cream">
+                                    {{ $item['label'] }}
+                                </span>
+                            </span>
 
-                        <a href="{{ route('profile.edit') }}"
-                           class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-150"
-                           onmouseover="this.style.backgroundColor='var(--bg-tertiary)';"
-                           onmouseout="this.style.backgroundColor='transparent';">
-                            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: var(--gold-soft); color: var(--gold);">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            <span class="flex items-center gap-3">
+                                @if(!empty($item['badge']) && $item['badge'] > 0)
+                                    <span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold text-white bg-red-600" style="border-radius: 2px;">
+                                        {{ $item['badge'] > 9 ? '9+' : $item['badge'] }}
+                                    </span>
+                                @endif
+                                <svg class="w-3.5 h-3.5 text-ink-faint dark:text-cream/30 group-hover:text-forest dark:group-hover:text-gold group-hover:-translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
                                 </svg>
-                            </div>
-                            <span class="text-[13px] font-medium" style="color: var(--text-primary);">الملف الشخصي</span>
+                            </span>
                         </a>
-
-                        <a href="{{ route('cart.index') }}"
-                           class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-150"
-                           onmouseover="this.style.backgroundColor='var(--bg-tertiary)';"
-                           onmouseout="this.style.backgroundColor='transparent';">
-                            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: var(--gold-soft); color: var(--gold);">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                            </div>
-                            <span class="text-[13px] font-medium" style="color: var(--text-primary);">سلة المشتريات</span>
-                        </a>
-                    </div>
+                    @endforeach
                 </div>
             </div>
+        </aside>
 
-            <div class="md:col-span-2">
-                <div class="rounded-xl border overflow-hidden" style="background-color: var(--bg-primary); border-color: var(--border-light);">
-                    <div class="px-5 py-4 border-b flex items-center justify-between" style="border-color: var(--border-light);">
-                        <h2 class="text-[14px] font-semibold" style="color: var(--text-primary);">آخر الطلبات</h2>
-                        <a href="{{ route('orders.index') }}" class="text-[12px] font-semibold flex items-center gap-1"
-                           style="color: var(--gold);">
-                            عرض الكل
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        {{-- ─── RECENT ORDERS ─── --}}
+        <div class="lg:col-span-8">
+            <div class="border border-stone-200 dark:border-stone-800" style="border-radius: 4px;">
+
+                <div class="flex items-center justify-between px-6 py-5 border-b border-stone-200 dark:border-stone-800">
+                    <span class="text-[10px] font-semibold tracking-widest uppercase text-ink-muted dark:text-cream/60">
+                        آخر الطلبات
+                    </span>
+                    <a href="{{ route('orders.index') }}" class="link-arrow text-xs">
+                        عرض الكل
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </a>
+                </div>
+
+                @if($recentOrders->count())
+                    @php
+                        $statusMap = [
+                            'pending'    => ['label' => 'قيد المراجعة', 'color' => 'text-amber-700 dark:text-amber-300', 'bg' => 'bg-amber-50 dark:bg-amber-950/30', 'border' => 'border-amber-200 dark:border-amber-900/50'],
+                            'processing' => ['label' => 'قيد المعالجة', 'color' => 'text-blue-700 dark:text-blue-300', 'bg' => 'bg-blue-50 dark:bg-blue-950/30', 'border' => 'border-blue-200 dark:border-blue-900/50'],
+                            'shipped'    => ['label' => 'تم الشحن',    'color' => 'text-violet-700 dark:text-violet-300', 'bg' => 'bg-violet-50 dark:bg-violet-950/30', 'border' => 'border-violet-200 dark:border-violet-900/50'],
+                            'delivered'  => ['label' => 'تم التوصيل', 'color' => 'text-green-700 dark:text-green-300', 'bg' => 'bg-green-50 dark:bg-green-950/30', 'border' => 'border-green-200 dark:border-green-900/50'],
+                            'cancelled'  => ['label' => 'ملغي',        'color' => 'text-red-700 dark:text-red-300', 'bg' => 'bg-red-50 dark:bg-red-950/30', 'border' => 'border-red-200 dark:border-red-900/50'],
+                        ];
+                    @endphp
+
+                    <div class="divide-y divide-stone-200 dark:divide-stone-800">
+                        @foreach($recentOrders as $order)
+                            @php
+                                $status = $statusMap[$order->status] ?? ['label' => $order->status, 'color' => 'text-ink-muted', 'bg' => 'bg-stone-100 dark:bg-stone-800', 'border' => 'border-stone-200 dark:border-stone-700'];
+                            @endphp
+
+                            <a href="{{ route('orders.show', $order->id) }}"
+                               class="group flex items-center justify-between gap-4 p-5 hover:bg-stone-50 dark:hover:bg-zinc-900 transition-colors">
+
+                                <div class="flex items-center gap-4 min-w-0">
+                                    <span class="w-11 h-11 flex items-center justify-center shrink-0 bg-forest/5 dark:bg-gold/10 text-forest dark:text-gold group-hover:bg-forest group-hover:text-cream dark:group-hover:bg-gold dark:group-hover:text-ink transition-colors" style="border-radius: 4px;">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                        </svg>
+                                    </span>
+                                    <div class="min-w-0">
+                                        <p class="font-display text-sm font-bold truncate text-ink dark:text-cream mb-0.5">
+                                            {{ $order->order_number }}
+                                        </p>
+                                        <p class="text-xs text-ink-faint dark:text-cream/40">
+                                            <span dir="ltr">{{ $order->created_at->format('Y-m-d') }}</span>
+                                            <span class="mx-1.5 opacity-40">·</span>
+                                            {{ $order->items->count() }} {{ $order->items->count() === 1 ? 'منتج' : 'منتجات' }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-4 shrink-0">
+                                    <span class="hidden sm:inline-flex items-center px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase border {{ $status['bg'] }} {{ $status['border'] }} {{ $status['color'] }}" style="border-radius: 2px;">
+                                        {{ $status['label'] }}
+                                    </span>
+                                    <span class="font-display text-base font-bold text-forest dark:text-gold whitespace-nowrap">
+                                        ${{ number_format($order->total_amount, 2) }}
+                                    </span>
+                                    <svg class="w-4 h-4 text-ink-faint dark:text-cream/30 group-hover:text-forest dark:group-hover:text-gold group-hover:-translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-20">
+
+                        <div class="w-20 h-20 mx-auto mb-6 flex items-center justify-center border border-stone-300 dark:border-stone-700" style="border-radius: 4px;">
+                            <svg class="w-8 h-8 text-ink-faint dark:text-cream/30" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                            </svg>
+                        </div>
+
+                        <p class="font-display font-bold text-lg mb-2">لا توجد طلبات بعد</p>
+                        <p class="text-sm text-ink-muted dark:text-cream/60 mb-8">ابدأ التسوق واكتشف منتجاتنا</p>
+
+                        <a href="{{ route('products.index') }}" class="btn-solid group inline-flex">
+                            ابدأ التسوق
+                            <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
                             </svg>
                         </a>
                     </div>
-
-                    @if($recentOrders->count())
-                        <div class="divide-y" style="border-color: var(--border-light);">
-                            @foreach($recentOrders as $order)
-                                @php
-                                    $labels = [
-                                        'pending' => 'قيد المراجعة',
-                                        'processing' => 'قيد المعالجة',
-                                        'shipped' => 'تم الشحن',
-                                        'delivered' => 'تم التوصيل',
-                                        'cancelled' => 'ملغي',
-                                    ];
-                                    $colors = [
-                                        'pending' => ['#fef3c7', '#b45309'],
-                                        'processing' => ['#dbeafe', '#1d4ed8'],
-                                        'shipped' => ['#ede9fe', '#6d28d9'],
-                                        'delivered' => ['#d1fae5', '#047857'],
-                                        'cancelled' => ['#fee2e2', '#b91c1c'],
-                                    ];
-                                    $c = $colors[$order->status] ?? ['#e5e7eb', '#6b7280'];
-                                @endphp
-
-                                <a href="{{ route('orders.show', $order->id) }}"
-                                   class="flex items-center justify-between p-4 transition-colors duration-150 gap-4"
-                                   onmouseover="this.style.backgroundColor='var(--bg-tertiary)';"
-                                   onmouseout="this.style.backgroundColor='transparent';">
-                                    <div class="flex items-center gap-3 min-w-0">
-                                        <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style="background-color: var(--gold-soft); color: var(--gold);">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                            </svg>
-                                        </div>
-                                        <div class="min-w-0">
-                                            <p class="text-[13px] font-semibold truncate" style="color: var(--text-primary);">{{ $order->order_number }}</p>
-                                            <p class="text-[11px]" style="color: var(--text-tertiary);">{{ $order->created_at->format('Y-m-d') }} · {{ $order->items->count() }} منتج</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-3 shrink-0">
-                                        <span class="text-[11px] font-semibold px-2 py-1 rounded"
-                                              style="background-color: {{ $c[0] }}; color: {{ $c[1] }};">
-                                            {{ $labels[$order->status] ?? $order->status }}
-                                        </span>
-                                        <p class="text-[13px] font-bold" style="color: var(--gold);">${{ number_format($order->total_amount, 2) }}</p>
-                                    </div>
-                                </a>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="py-14 text-center">
-                            <div class="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4" style="background-color: var(--bg-tertiary);">
-                                <svg class="w-7 h-7" style="color: var(--text-tertiary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                                </svg>
-                            </div>
-                            <p class="text-[13px] mb-5" style="color: var(--text-secondary);">لا توجد طلبات بعد</p>
-                            <a href="{{ route('products.index') }}"
-                               class="inline-flex items-center gap-2 h-10 px-5 rounded-lg font-semibold text-[12px] text-white transition-all duration-200 hover:opacity-90"
-                               style="background-color: var(--gold);">
-                                ابدأ التسوق
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                                </svg>
-                            </a>
-                        </div>
-                    @endif
-                </div>
+                @endif
             </div>
-
         </div>
 
     </div>
+
+</div>
 
 @endsection
