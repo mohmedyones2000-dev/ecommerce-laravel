@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl \
+    && docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip intl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
@@ -40,5 +40,8 @@ EXPOSE 8080
 CMD php artisan config:clear \
     && php artisan view:clear \
     && php artisan route:clear \
+    && php artisan storage:link --force \
+    && php artisan filament:assets \
     && php artisan migrate --force \
-    && php artisan serve --host=0.0.0.0 --port=$PORT
+    && php artisan db:seed --force \
+    && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
