@@ -13,6 +13,7 @@ use App\Observers\ProductImageObserver;
 use App\Services\AdminNotificationService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -25,11 +26,19 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->registerObservers();  
+        $this->forceHttpsInProduction();
+        $this->registerObservers();
         $this->registerUserNotificationEvents();
         $this->registerAdminNotificationEvents();
         $this->shareSiteSettings();
         $this->configureModels();
+    }
+
+    protected function forceHttpsInProduction(): void
+    {
+        if ($this->app->isProduction()) {
+            URL::forceScheme('https');
+        }
     }
 
     protected function registerObservers(): void
@@ -91,7 +100,7 @@ class AppServiceProvider extends ServiceProvider
     protected function configureModels(): void
     {
         Model::preventLazyLoading(false);
-    Model::preventSilentlyDiscardingAttributes(!$this->app->isProduction());
-    Model::preventAccessingMissingAttributes(!$this->app->isProduction());
+        Model::preventSilentlyDiscardingAttributes(!$this->app->isProduction());
+        Model::preventAccessingMissingAttributes(!$this->app->isProduction());
     }
 }
